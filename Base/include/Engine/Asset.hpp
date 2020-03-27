@@ -26,8 +26,51 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "Engine/AssetManager.hpp"
+#pragma once
+#include <Framework/Memory/Object.hpp>
+#include <Framework/String.hpp>
+#include <Framework/Name.hpp>
+#include <Framework/TypeInfo.hpp>
 
-//Force compilers like MSVC to generate symbols for the rendering engine part
-#include "Engine/Driver/IRenderEngine.hpp"
+namespace bp3d
+{
+    class BP3D_API Asset : public bpf::memory::Object
+    {
+    private:
+        bpf::Name _type;
+        bpf::Name _vPathHash;
+        bpf::String _vPathStr;
 
+    public:
+        inline Asset(const bpf::Name &type, const bpf::String &vpath)
+            : _type(type)
+            , _vPathHash(bpf::Name(vpath))
+            , _vPathStr(vpath)
+        {
+        }
+
+        inline Asset()
+            : _type("bp3d::Asset")
+            , _vPathHash("Invalid")
+            , _vPathStr("Invalid")
+        {
+        }
+
+        inline const bpf::String &VirtualPath() const noexcept
+        {
+            return (_vPathStr);
+        }
+
+        inline bpf::Name HashCode() const noexcept
+        {
+            return (_vPathHash);
+        }
+
+        inline bpf::Name Type() const noexcept
+        {
+            return (_type);
+        }
+    };
+}
+
+DEFINE_TYPEINFO(bp3d::Asset);

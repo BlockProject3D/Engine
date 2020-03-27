@@ -27,12 +27,92 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
+#include <Framework/Collection/HashMap.hpp>
+#include <Framework/Memory/UniquePtr.hpp>
+#include <Framework/Memory/ObjectPtr.hpp>
+#include <Framework/TypeInfo.hpp>
+#include "Engine/Asset.hpp"
+
+//Asset url = <asset type>/<format>,(<root>/)<path/to/file.whatever>
+//            [  Asset type info  ],[        Asset location        ]
+//With root = %App% (application's root directory), %Cache% (application's cache directory), %Assets% (application's assets directory)
+//When registering asset providers specify the format AssetManager.AddProvider<asset::MyAssetType>("mySuperAssetFormat");
+//To load assets:
+//      AssetManager.Add(<asset url>)
+//      New assets are loaded asynchronously so add will append to a pending queue and no asset will immediatly be mounted
+//Unloading assets
+//      AssetManager.Remove(<virtual path>)
+//      The virtual path can finish by * to request mass unloading of assets
+//      This operation is synchronous and will reset all instances of ObjectPtr to Null
+//      Attemoting to unload an asset set as default for a given type will result in this asset be ignored
+//Polling
+//      The calling application should call Poll on any asset manager to ensure the proper mounting of newly built assets
+//      The function returns true when no more assets are pending mount
+//Asset providers
+//      AssetManager.SetProvider<asset::MyAssetType>(const bpf::String &format, UniquePtr<IAssetProvider<asset::MyAssetType>> &&)
+//      AssetManager.GetProvider<asset::MyAssetType>(const bpf::String &format)
+//Defaults == OK
+//      AssetManager.SetDefault<asset::MyAssetType>(<virtual path>)
+//      AssetManager.GetDefault<asset::MyAssetType>()
+//Getting assets == OK
+//      AssetManager.Get<asset::MyAssetType>(<virtual path>)
+//Injecting existing assets: == OK
+//      AssetManager.Add<asset::MyAssetType>(UniquePtr<asset::MyAssetType> &&)
 
 namespace bp3d
 {
     class BP3D_API AssetManager
     {
     private:
+        bpf::collection::HashMap<bpf::Name, bpf::memory::UniquePtr<Asset>> _mountedAssets;
+        bpf::collection::HashMap<bpf::Name, bpf::Name> _defaults;
+
     public:
+        AssetManager();
+        AssetManager(AssetManager &&other) = delete;
+        AssetManager(const AssetManager &other) = delete;
+
+        void Add(const bpf::String &url);
+
+        template <typename T>
+        inline void Add(bpf::memory::UniquePtr<Asset> &&ptr)
+        {
+            _mountedAssets.Add(ptr->HashCode(), ptr);
+        }
+
+        void Remove(const bpf::String &vpath);
+
+        bool Poll();
+
+        template <typename T>
+        inline bpf::memory::ObjectPtr<T> Get(const bpf::Name &vpath) const noexcept
+        {
+            if (!_mountedAssets.HasKey(vpath) || _mountedAssets[vpath]->Type() != bpf::Name(bpf::TypeName<T>()))
+                return (GetDefault<T>());
+            return (static_cast<T *>(*_mountedAssets[vpath]));
+        }
+
+        template <typename T>
+        inline bpf::memory::ObjectPtr<T> GetDefault() const noexcept
+        {
+            auto tname = bpf::Name(bpf::TypeName<T>());
+
+            if (!_defaults.HasKey(tname))
+                return (Null); //We have no default registered
+            return (static_cast<T *>(*_mountedAssets[_defaults[tname]]));
+        }
+
+        template <typename T>
+        inline void SetDefault(const bpf::Name &vpath)
+        {
+            auto tname = bpf::Name(bpf::TypeName<T>());
+
+            if (!_mountedAssets.HasKey(vpath) || _mountedAssets[vpath]->Type() != tname)
+                return;
+            _defaults[tname] = vpath; //Will update or create entry in defaults map
+        }
+
+        AssetManager &operator=(const AssetManager &other) = delete;
+        AssetManager &operator=(AssetManager &&other) = delete;
     };
 }

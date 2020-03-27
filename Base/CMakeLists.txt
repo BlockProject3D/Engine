@@ -17,7 +17,13 @@ set(SOURCES
     include/Engine/Driver/TextureDescriptor.hpp
     include/Engine/Driver/VertexFormatDescriptor.hpp
     include/Engine/Input/EKey.hpp
+    include/Engine/Asset/ConstantBuffer.hpp
+    include/Engine/Asset/Model.hpp
+    include/Engine/Asset/Sampler.hpp
+    include/Engine/Asset/Shader.hpp
+    include/Engine/Asset/Texture.hpp
     include/Engine/AssetManager.hpp
+    include/Engine/Asset.hpp
     src/Engine/AssetManager.cpp
 )
 
