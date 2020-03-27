@@ -30,7 +30,6 @@
 #include <Framework/Memory/UniquePtr.hpp>
 #include "Engine/Driver/IDisplay.hpp"
 
-//TODO: Rename render to driver
 namespace bp3d
 {
     namespace driver
