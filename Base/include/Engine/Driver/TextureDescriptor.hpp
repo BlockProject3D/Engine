@@ -27,15 +27,27 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
+#include <Framework/Types.hpp>
 
 namespace bp3d
 {
-    namespace render
+    namespace driver
     {
-        class BP3D_API IRenderEngine
+        enum class BP3D_API ETextureFormat
         {
-            virtual ~IRenderEngine() {}
+            RGB_UINT_8,
+            RGBA_UINT_8,
+            R_UINT_8,
+            R_FLOAT_32
+        };
 
+        struct BP3D_API TextureDescriptor
+        {
+            ETextureFormat Format;
+            bpf::fint MipMaps;
+            bpf::fsize Width;
+            bpf::fsize Height;
+            void *Data;
         };
     }
 }

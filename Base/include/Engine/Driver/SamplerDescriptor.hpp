@@ -27,3 +27,31 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
+
+namespace bp3d
+{
+    namespace driver
+    {
+        enum class BP3D_API ETextureFiltering
+        {
+            NEAREST,
+            LINEAR,
+            LINEAR_MIPMAP
+        };
+
+        enum class BP3D_API ETextureAddressing
+        {
+            CLAMP_TO_EDGE,
+            MIRRORED_REPEAT,
+            REPEAT
+        };
+
+        struct BP3D_API SamplerDescriptor
+        {
+            ETextureFiltering MignifyFunc;
+            ETextureFiltering MagnifyFunc;
+            ETextureAddressing AddressModeS;
+            ETextureAddressing AddressModeT;
+        };
+    }
+}

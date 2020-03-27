@@ -27,3 +27,22 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
+#include <Framework/Types.hpp>
+
+namespace bp3d
+{
+    namespace driver
+    {
+        enum class BP3D_API EBufferType
+        {
+            DYNAMIC,
+            STATIC
+        };
+
+        struct BP3D_API BufferDescriptor
+        {
+            bpf::fsize Size;
+            void *Data;
+        };
+    }
+}

@@ -27,3 +27,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
+
+namespace bp3d
+{
+    namespace driver
+    {
+        //Note: The entire render engin abstraction will use void* to represent arbitary handle type of data opaque to the user and API dependent
+        //Never attempt to read the content of such handles as it will contain platform dependent data and is entirely dependent over the current driver
+        using Resource = void *;
+    }
+}

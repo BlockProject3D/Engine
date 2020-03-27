@@ -27,4 +27,28 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
+#include <Framework/Types.hpp>
+#include <Framework/Collection/ArrayList.hpp>
 
+namespace bp3d
+{
+    namespace driver
+    {
+        enum class BP3D_API EVertexComponentType
+        {
+            FLOAT,
+            INT
+        };
+
+        struct BP3D_API VertexComponent
+        {
+            EVertexComponentType Type;
+            bpf::uint8 Size;
+        };
+
+        struct BP3D_API VertexFormatDescriptor
+        {
+            bpf::collection::ArrayList<VertexComponent> Components;
+        };
+    }
+}

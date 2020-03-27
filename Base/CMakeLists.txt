@@ -4,14 +4,21 @@ project(BP3D)
 include("${BP_FRAMEWORK_ROOT}/CMakes/Framework.cmake")
 
 set(SOURCES
-	include/Engine/Input/EKey.hpp
-	include/Engine/Render/IDisplay.hpp
-	include/Engine/Render/IRenderEngine.hpp
-	include/Engine/Render/IRenderContext.hpp
-	include/Engine/Render/IResourceAllocator.hpp
-	include/Engine/Render/Event.hpp
-	include/Engine/AssetManager.hpp
-	src/Engine/AssetManager.cpp
+    include/Engine/Driver/BufferDescriptor.hpp
+    include/Engine/Driver/Event.hpp
+    include/Engine/Driver/IDisplay.hpp
+    include/Engine/Driver/IRenderContext.hpp
+    include/Engine/Driver/IRenderEngine.hpp
+    include/Engine/Driver/IResourceAllocator.hpp
+    include/Engine/Driver/RenderTargetDescriptor.hpp
+    include/Engine/Driver/Resource.hpp
+    include/Engine/Driver/SamplerDescriptor.hpp
+    include/Engine/Driver/ShaderProgramDescriptor.hpp
+    include/Engine/Driver/TextureDescriptor.hpp
+    include/Engine/Driver/VertexFormatDescriptor.hpp
+    include/Engine/Input/EKey.hpp
+    include/Engine/AssetManager.hpp
+    src/Engine/AssetManager.cpp
 )
 
 bp_setup_module(BP3D BP3D_API)

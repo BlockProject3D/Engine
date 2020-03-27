@@ -1,4 +1,4 @@
-// Copyright (c) 2018, BlockProject
+// Copyright (c) 2020, BlockProject
 //
 // All rights reserved.
 //
@@ -26,15 +26,114 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef API_H_
-#define API_H_
+#pragma once
 
-#if defined(__GNUC__) || defined(__clang__)
-    #define DEPRECATED(func) func __attribute__((deprecated))
-#elif defined(_MSC_VER)
-    #define DEPRECATED(func) __declspec(deprecated) func
-#endif
-
-#define ENGINE_API BPF_API
-
-#endif /* !API_H_ */
+namespace bp3d
+{
+    namespace input
+    {
+        enum class BP3D_API EKey
+        {
+            KEY_A,
+            KEY_B,
+            KEY_C,
+            KEY_D,
+            KEY_E,
+            KEY_F,
+            KEY_G,
+            KEY_H,
+            KEY_I,
+            KEY_J,
+            KEY_K,
+            KEY_L,
+            KEY_M,
+            KEY_N,
+            KEY_O,
+            KEY_P,
+            KEY_Q,
+            KEY_R,
+            KEY_S,
+            KEY_T,
+            KEY_U,
+            KEY_V,
+            KEY_W,
+            KEY_X,
+            KEY_Y,
+            KEY_Z,
+            KEY_1,
+            KEY_2,
+            KEY_3,
+            KEY_4,
+            KEY_5,
+            KEY_6,
+            KEY_7,
+            KEY_8,
+            KEY_9,
+            KEY_0,
+            KEY_MINUS,
+            KEY_EQUAL,
+            KEY_BACKSPACE,
+            KEY_SPACE,
+            KEY_APOSTROPHE,
+            KEY_BACK_SLASH,
+            KEY_SLASH,
+            KEY_COMA,
+            KEY_DOT,
+            KEY_LSHIFT,
+            KEY_RSHIFT,
+            KEY_ENTER,
+            KEY_TAB,
+            KEY_LCTRL,
+            KEY_RCTRL,
+            KEY_LALT,
+            KEY_RALT,
+            KEY_ESCAPE,
+            KEY_F1,
+            KEY_F2,
+            KEY_F3,
+            KEY_F4,
+            KEY_F5,
+            KEY_F6,
+            KEY_F7,
+            KEY_F8,
+            KEY_F9,
+            KEY_F10,
+            KEY_F11,
+            KEY_F12,
+            KEY_PAGE_UP,
+            KEY_PAGE_DOWN,
+            KEY_HOME,
+            KEY_END,
+            KEY_PAUSE,
+            KEY_PRINT_SCREEN,
+            KEY_INSERT,
+            KEY_LEFT,
+            KEY_RIGHT,
+            KEY_UP,
+            KEY_DOWN,
+            KEYPAD_0,
+            KEYPAD_1,
+            KEYPAD_2,
+            KEYPAD_3,
+            KEYPAD_4,
+            KEYPAD_5,
+            KEYPAD_6,
+            KEYPAD_7,
+            KEYPAD_8,
+            KEYPAD_9,
+            KEYPAD_ENTER,
+            KEYPAD_DOT,
+            KEYPAD_PLUS,
+            KEYPAD_MINUS,
+            KEYPAD_MULTIPLY,
+            KEYPAD_DEVIDE,
+            MOUSE_LEFT,
+            MOUSE_RIGHT,
+            MOUSE_MIDDLE,
+            JOYSTICK_1,
+            JOYSTICK_2,
+            JOYSTICK_3,
+            JOYSTICK_4
+        };
+    }
+}
