@@ -68,7 +68,9 @@ namespace bp3d
         bpf::collection::HashMap<bpf::Name, bpf::Name> _defaults;
 
     public:
-        AssetManager();
+        inline AssetManager()
+        {
+        }
         AssetManager(AssetManager &&other) = delete;
         AssetManager(const AssetManager &other) = delete;
 

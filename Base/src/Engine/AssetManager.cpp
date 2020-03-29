@@ -31,3 +31,19 @@
 //Force compilers like MSVC to generate symbols for the rendering engine part
 #include "Engine/Driver/IRenderEngine.hpp"
 
+using namespace bp3d;
+
+void AssetManager::Add(const bpf::String &url)
+{
+
+}
+
+void AssetManager::Remove(const bpf::String &vpath)
+{
+
+}
+
+bool AssetManager::Poll()
+{
+    
+}

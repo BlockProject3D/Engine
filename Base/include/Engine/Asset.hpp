@@ -73,4 +73,4 @@ namespace bp3d
     };
 }
 
-DEFINE_TYPEINFO(bp3d::Asset);
+BP_DEFINE_TYPENAME(bp3d::Asset);
