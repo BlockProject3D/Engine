@@ -28,6 +28,7 @@
 
 #pragma once
 #include <Framework/Memory/UniquePtr.hpp>
+#include <Framework/System/IApplication.hpp>
 #include "Engine/Driver/IDisplay.hpp"
 
 namespace bp3d
@@ -47,7 +48,7 @@ namespace bp3d
         {
         public:
             virtual ~IRenderEngine() {}
-            virtual bpf::memory::UniquePtr<IDisplay> CreateDisplay(const bpf::String &title, const bpf::fsize width, const bpf::fsize height) = 0;
+            virtual bpf::memory::UniquePtr<IDisplay> CreateDisplay(bpf::system::IApplication &app, const bpf::String &title, const bpf::fsize width, const bpf::fsize height) = 0;
             virtual RenderEngineProperties GetProperties() const noexcept = 0;
         };
     }
