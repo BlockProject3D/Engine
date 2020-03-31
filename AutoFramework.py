@@ -5,7 +5,7 @@ import platform
 import urllib.request
 import zipfile
 
-ReleaseNumber = "c9e83c2"
+ReleaseNumber = "6b36c02"
 
 release = ""
 

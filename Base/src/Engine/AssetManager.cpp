@@ -26,6 +26,7 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <Framework/ParseException.hpp>
 #include "Engine/AssetManager.hpp"
 
 //Force compilers like MSVC to generate symbols for the rendering engine part
@@ -33,17 +34,92 @@
 
 using namespace bp3d;
 
-void AssetManager::Add(const bpf::String &url)
+void AssetManager::Add(const bpf::String &vpath, const bpf::String &url)
 {
-
+    _log.Info("Loading asset '[]' with url '[]'...", vpath, url);
+    auto arr = url.Explode(',');
+    if (arr.Size() != 2)
+    {
+        _log.Error("Could not load asset '[]': incorrect asset url format", vpath);
+        return;
+    }
+    auto format = arr[0];
+    auto location = arr[1];
+    if (GetProvider(format) == Null)
+    {
+        _log.Error("Could not load asset '[]': no installed provider matches asset format ([])", vpath, format);
+        return;
+    }
+    try
+    {
+        auto ptr = GetProvider(format)->Create(location);
+        if (ptr == Null)
+        {
+            _log.Error("Could not load asset '[]': IAssetProvider failure", vpath);
+            return;
+        }
+        _thread.Add(vpath, std::move(ptr));
+        if (_thread.GetState() != bpf::system::Thread::RUNNING)
+            _thread.Start();
+    }
+    catch (const bpf::RuntimeException &ex)
+    {
+        _log.Error("Could not load asset '[]': an unhandled exception has occured", vpath);
+        _log.Error("        > []: []", ex.Type(), ex.Message());
+    }
 }
 
 void AssetManager::Remove(const bpf::String &vpath)
 {
+    bool glob = vpath.EndsWith("*");
+    bpf::String search;
 
+    if (glob)
+        search = vpath.Sub(0, vpath.Len() - 1);
+    else
+        search = vpath;
+    for (auto &asset : _mountedAssets)
+    {
+        if (glob && asset.Value->VirtualPath().StartsWith(search))
+        {
+            _log.Info("Unloading asset '[]'...", asset.Value->VirtualPath());
+            _mountedAssets[asset.Key] = Null; //Force destruction of UniquePtr
+            _mountedAssets.RemoveAt(asset.Key); //Inform HashMap that slot can be reclaimed
+        }
+        else if (!glob && asset.Value->VirtualPath() == search)
+        {
+            _log.Info("Unloading asset '[]'...", asset.Value->VirtualPath());
+            _mountedAssets[asset.Key] = Null; //Force destruction of UniquePtr
+            _mountedAssets.RemoveAt(asset.Key); //Inform HashMap that slot can be reclaimed
+            return;
+        }
+    }
 }
 
-bool AssetManager::Poll()
+bool AssetManager::Poll(const bpf::fsize maxMountable)
 {
-    
+    while (maxMountable > 0)
+    {
+        AssetBuildThread::Entry entry;
+        if (!_thread.PollMountableEntry(entry))
+            return (false);
+        if (entry.Error != bpf::String::Empty)
+        {
+            _log.Error("Could not build asset '[]': an unhandled exception has occured", entry.VPath);
+            _log.Error("        > []", entry.Error);
+            continue;
+        }
+        while (entry.Cached.Size() > 0)
+        {
+            auto tuple = entry.Cached.Pop();
+            auto vpath = entry.VPath + '/' + tuple.Get<0>();
+            auto url = tuple.Get<1>();
+            Add(vpath, url);
+        }
+        auto assetPtr = entry.Builder->Mount(entry.VPath);
+        if (assetPtr != Null)
+            _mountedAssets.Add(bpf::Name(entry.VPath), std::move(assetPtr));
+        _log.Info("Successfully loaded asset '[]'", entry.VPath);
+    }
+    return (true);
 }

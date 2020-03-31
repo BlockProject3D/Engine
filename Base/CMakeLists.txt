@@ -22,9 +22,13 @@ set(SOURCES
     include/Engine/Asset/Sampler.hpp
     include/Engine/Asset/Shader.hpp
     include/Engine/Asset/Texture.hpp
+    include/Engine/IAssetProvider.hpp
+    include/Engine/IAssetBuilder.hpp
+    include/Engine/AssetBuildThread.hpp
     include/Engine/AssetManager.hpp
     include/Engine/Asset.hpp
     src/Engine/AssetManager.cpp
+    src/Engine/AssetBuildThread.cpp
 )
 
 bp_setup_module(BP3D BP3D_API)

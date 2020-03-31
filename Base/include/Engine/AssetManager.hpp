@@ -31,7 +31,10 @@
 #include <Framework/Memory/UniquePtr.hpp>
 #include <Framework/Memory/ObjectPtr.hpp>
 #include <Framework/TypeInfo.hpp>
+#include <Framework/Log/Logger.hpp>
+#include "Engine/IAssetProvider.hpp"
 #include "Engine/Asset.hpp"
+#include "Engine/AssetBuildThread.hpp"
 
 //Asset url = <asset type>/<format>,(<root>/)<path/to/file.whatever>
 //            [  Asset type info  ],[        Asset location        ]
@@ -48,7 +51,7 @@
 //Polling
 //      The calling application should call Poll on any asset manager to ensure the proper mounting of newly built assets
 //      The function returns true when no more assets are pending mount
-//Asset providers
+//Asset providers == OK
 //      AssetManager.SetProvider<asset::MyAssetType>(const bpf::String &format, UniquePtr<IAssetProvider<asset::MyAssetType>> &&)
 //      AssetManager.GetProvider<asset::MyAssetType>(const bpf::String &format)
 //Defaults == OK
@@ -64,17 +67,32 @@ namespace bp3d
     class BP3D_API AssetManager
     {
     private:
-        bpf::collection::HashMap<bpf::Name, bpf::memory::UniquePtr<Asset>> _mountedAssets;
+        bpf::log::Logger _log;
+        AssetBuildThread _thread;
+        bpf::collection::HashMap<bpf::Name, bpf::memory::UniquePtr<bp3d::Asset>> _mountedAssets;
+        bpf::collection::HashMap<bpf::String, bpf::memory::UniquePtr<IAssetProvider>> _providers;
         bpf::collection::HashMap<bpf::Name, bpf::Name> _defaults;
 
     public:
         inline AssetManager()
+            : _log("AssetManager")
         {
         }
         AssetManager(AssetManager &&other) = delete;
         AssetManager(const AssetManager &other) = delete;
 
-        void Add(const bpf::String &url);
+        /**
+         * Adds a new asset by url
+         * Asset url = <asset type>/<format>,(<root>/)<path/to/file.whatever>
+         *             [  Asset type info  ],[        Asset location        ]
+         * @param url Asset url string
+         */
+        void Add(const bpf::String &vpath, const bpf::String &url);
+
+        inline void AddLogHandler(bpf::memory::UniquePtr<bpf::log::ILogHandler> &&ptr)
+        {
+            _log.AddHandler(std::move(ptr));
+        }
 
         template <typename T>
         inline void Add(bpf::memory::UniquePtr<Asset> &&ptr)
@@ -84,7 +102,18 @@ namespace bp3d
 
         void Remove(const bpf::String &vpath);
 
-        bool Poll();
+        bool Poll(const bpf::fsize maxMountable = 1);
+
+        template <typename T>
+        inline void SetProvider(const bpf::String &format, bpf::memory::UniquePtr<IAssetProvider> &&ptr)
+        {
+            _providers.Add(bpf::String(bpf::TypeName<T>()) + '/' + format, std::move(ptr));
+        }
+
+        inline bpf::memory::UniquePtr<IAssetProvider> &GetProvider(const bpf::String &format)
+        {
+            return (_providers[format]);
+        }
 
         template <typename T>
         inline bpf::memory::ObjectPtr<T> Get(const bpf::Name &vpath) const noexcept
