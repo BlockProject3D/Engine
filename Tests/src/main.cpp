@@ -26,62 +26,11 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <Framework/System/ScopeLock.hpp>
-#include "Engine/AssetBuildThread.hpp"
+#include <gtest/gtest.h>
 
-using namespace bp3d;
-
-AssetBuildThread::AssetBuildThread()
-    : bpf::system::Thread("AssetBuilder")
+int main(int argc, char **argv)
 {
-}
-
-void AssetBuildThread::Add(const bpf::String &vpath, bpf::memory::UniquePtr<IAssetBuilder> &&ptr)
-{
-    auto lock = bpf::system::ScopeLock(_mutex);
-    Entry entry;
-    entry.VPath = vpath;
-    entry.Builder = std::move(ptr);
-    _pendingEntries.Push(std::move(entry));
-}
-
-bool AssetBuildThread::PollMountableEntry(Entry &entry)
-{
-    auto lock = bpf::system::ScopeLock(_mutex);
-    if (_mountableEntries.Size() == 0)
-        return (false);
-    entry = _mountableEntries.Pop();
-    return (true);
-}
-
-void AssetBuildThread::Run()
-{
-    _mutex.Lock();
-    bpf::fsize size = _pendingEntries.Size();
-    _mutex.Unlock();
-
-    while (size > 0)
-    {
-        _mutex.Lock();
-        Entry entry = _pendingEntries.Pop();
-        _mutex.Unlock();
-        try
-        {
-            bpf::collection::Queue<bpf::Tuple<bpf::String, bpf::String>> cache;
-            entry.Builder->Build(cache);
-            entry.Cached = std::move(cache);
-            entry.Error = bpf::String::Empty;
-            _mutex.Lock();
-            _mountableEntries.Push(std::move(entry));
-            _mutex.Unlock();
-        }
-        catch (const bpf::RuntimeException &ex)
-        {
-            entry.Error = bpf::String::Format("[]: []", ex.Type(), ex.Message());
-            _mutex.Lock();
-            _mountableEntries.Push(std::move(entry));
-            _mutex.Unlock();
-        }
-        --size;
-    }
+    ::testing::InitGoogleTest(&argc, argv);
+    int val = RUN_ALL_TESTS();
+    return (val);
 }

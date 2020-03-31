@@ -32,6 +32,7 @@
 #include <Framework/Memory/ObjectPtr.hpp>
 #include <Framework/TypeInfo.hpp>
 #include <Framework/Log/Logger.hpp>
+#include <Framework/System/Paths.hpp>
 #include "Engine/IAssetProvider.hpp"
 #include "Engine/Asset.hpp"
 #include "Engine/AssetBuildThread.hpp"
@@ -78,6 +79,10 @@ namespace bp3d
             : _log("AssetManager")
         {
         }
+        inline ~AssetManager()
+        {
+            _thread.Join();
+        }
         AssetManager(AssetManager &&other) = delete;
         AssetManager(const AssetManager &other) = delete;
 
@@ -94,6 +99,8 @@ namespace bp3d
             _log.AddHandler(std::move(ptr));
         }
 
+        static bpf::io::File GetAssetPath(const bpf::system::Paths paths, const bpf::String &location);
+
         template <typename T>
         inline void Add(bpf::memory::UniquePtr<Asset> &&ptr)
         {
@@ -103,6 +110,11 @@ namespace bp3d
         void Remove(const bpf::String &vpath);
 
         bool Poll(const bpf::fsize maxMountable = 1);
+
+        /**
+         * Yields the main thread waiting for all pending asset objects to be mounted
+         */
+        void WaitForAllObjects();
 
         template <typename T>
         inline void SetProvider(const bpf::String &format, bpf::memory::UniquePtr<IAssetProvider> &&ptr)
@@ -120,7 +132,7 @@ namespace bp3d
         {
             if (!_mountedAssets.HasKey(vpath) || _mountedAssets[vpath]->Type() != bpf::Name(bpf::TypeName<T>()))
                 return (GetDefault<T>());
-            return (static_cast<T *>(*_mountedAssets[vpath]));
+            return (static_cast<T *>(_mountedAssets[vpath].Raw()));
         }
 
         template <typename T>
@@ -130,7 +142,7 @@ namespace bp3d
 
             if (!_defaults.HasKey(tname))
                 return (Null); //We have no default registered
-            return (static_cast<T *>(*_mountedAssets[_defaults[tname]]));
+            return (static_cast<T *>(_mountedAssets[_defaults[tname]].Raw()));
         }
 
         template <typename T>

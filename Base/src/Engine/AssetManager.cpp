@@ -60,13 +60,24 @@ void AssetManager::Add(const bpf::String &vpath, const bpf::String &url)
         }
         _thread.Add(vpath, std::move(ptr));
         if (_thread.GetState() != bpf::system::Thread::RUNNING)
+        {
+            _thread.Join();
             _thread.Start();
+        }
     }
     catch (const bpf::RuntimeException &ex)
     {
         _log.Error("Could not load asset '[]': an unhandled exception has occured", vpath);
         _log.Error("        > []: []", ex.Type(), ex.Message());
     }
+}
+
+bpf::io::File AssetManager::GetAssetPath(const bpf::system::Paths paths, const bpf::String &location)
+{
+    auto path = location.Replace("%Cache%", paths.CacheDir().Path())
+                    .Replace("%App%", paths.AppRoot().Path())
+                    .Replace("%Assets%", (paths.AppRoot() + "Assets").Path());
+    return (bpf::io::File(path));
 }
 
 void AssetManager::Remove(const bpf::String &vpath)
@@ -83,16 +94,25 @@ void AssetManager::Remove(const bpf::String &vpath)
         if (glob && asset.Value->VirtualPath().StartsWith(search))
         {
             _log.Info("Unloading asset '[]'...", asset.Value->VirtualPath());
-            _mountedAssets[asset.Key] = Null; //Force destruction of UniquePtr
+            _mountedAssets[asset.Key] = Null;   //Force destruction of UniquePtr
             _mountedAssets.RemoveAt(asset.Key); //Inform HashMap that slot can be reclaimed
         }
         else if (!glob && asset.Value->VirtualPath() == search)
         {
             _log.Info("Unloading asset '[]'...", asset.Value->VirtualPath());
-            _mountedAssets[asset.Key] = Null; //Force destruction of UniquePtr
+            _mountedAssets[asset.Key] = Null;   //Force destruction of UniquePtr
             _mountedAssets.RemoveAt(asset.Key); //Inform HashMap that slot can be reclaimed
             return;
         }
+    }
+}
+
+void AssetManager::WaitForAllObjects()
+{
+    while (_thread.GetState() == bpf::system::Thread::RUNNING)
+    {
+        _thread.Join();
+        while (Poll());
     }
 }
 
