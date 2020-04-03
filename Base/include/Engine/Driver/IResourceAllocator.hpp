@@ -51,22 +51,82 @@ namespace bp3d
         {
         public:
             virtual ~IResourceAllocator() {}
+            virtual Resource AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height) = 0;
             virtual Resource AllocTexture2D(const EBufferType type, const TextureDescriptor &descriptor) = 0;
             virtual Resource AllocTexture2DArray(const EBufferType type, const TextureDescriptor &descriptor, const bpf::fsize layers) = 0;
             virtual Resource AllocTextureCube(const EBufferType type, const TextureDescriptor &descriptor) = 0;
             virtual Resource AllocSampler(const SamplerDescriptor &descriptor) = 0;
+            virtual Resource AllocRenderTargetComponent(const RenderTargetComponentDescriptor &descriptor) = 0;
             virtual Resource AllocRenderTarget(const RenderTargetDescriptor &descriptor) = 0;
             virtual Resource AllocConstantBuffer(const EBufferType type, const BufferDescriptor &descriptor) = 0;
-            virtual Resource AllocVertexBuffer(const EBufferType type, const VertexFormatDescriptor &vformat, const BufferDescriptor &buffer) = 0;
+            virtual Resource AllocVertexFormat(const VertexFormatDescriptor &vformat) = 0;
+            virtual Resource AllocVertexBuffer(const EBufferType type, const BufferDescriptor &buffer) = 0;
             virtual Resource AllocIndexBuffer(const EBufferType type, const BufferDescriptor &descriptor) = 0;
             virtual Resource AllocShaderProgram(const ShaderProgramDescriptor &descriptor) = 0;
+
+            virtual void FreeVertexFormat(Resource resource) = 0;
+
+            virtual void FreeDepthBuffer(Resource resource) = 0;
+
+            /**
+             * Request free of a 2D texture
+             * @param resource the resource to free
+             */
             virtual void FreeTexture2D(Resource resource) = 0;
+
+            /**
+             * Request free of a 2D texture array
+             * @param resource the resource to free
+             */
             virtual void FreeTexture2DArray(Resource resource) = 0;
-            virtual void FreeTextureCube(Resource resource) = 0;
+
+            /**
+             * Request free of a cube map
+             * @param resource the resource to free
+             */
+            virtual void FreeTexturpeCube(Resource resource) = 0;
+
+            /**
+             * Request free of a sampler object
+             * @param resource the resource to free
+             */
             virtual void FreeSampler(Resource resource) = 0;
+
+            /**
+             * Request free of a single render target component
+             * @param resource the resource to free
+             */
+            virtual void FreeRenderTargetComponent(Resource resource) = 0;
+
+            /**
+             * Request free of a render target
+             * WARNING: Free all components of a render target before freeing that render target, failure to do so is undefined behaviour
+             * @param resource the resource to free
+             */
             virtual void FreeRenderTarget(Resource resource) = 0;
+
+            /**
+             * Request free of a constant buffer
+             * @param resource the resource to free
+             */
+            virtual void FreeConstantBuffer(Resource resource) = 0;
+
+            /**
+             * Request free of a vertex buffer
+             * @param resource the resource to free
+             */
             virtual void FreeVertexBuffer(Resource resource) = 0;
+
+            /**
+             * Request free of an index buffer
+             * @param resource the resource to free
+             */
             virtual void FreeIndexBuffer(Resource resource) = 0;
+
+            /**
+             * Request free of a shader program
+             * @param resource the resource to free
+             */
             virtual void FreeShaderProgram(Resource resource) = 0;
         };
     }

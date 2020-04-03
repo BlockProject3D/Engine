@@ -36,18 +36,25 @@ namespace bp3d
     {
         enum class BP3D_API EVertexComponentType
         {
+            VECTOR_FLOAT_4,
+            VECTOR_FLOAT_3,
+            VECTOR_FLOAT_2,
+            VECTOR_INT_4,
+            VECTOR_INT_3,
+            VECTOR_INT_2,
             FLOAT,
             INT
         };
 
-        struct BP3D_API VertexComponent
+        struct VertexComponent
         {
             EVertexComponentType Type;
-            bpf::uint8 Size;
+            bpf::String Name;
         };
 
         struct BP3D_API VertexFormatDescriptor
         {
+            bpf::String Name;
             bpf::collection::ArrayList<VertexComponent> Components;
         };
     }

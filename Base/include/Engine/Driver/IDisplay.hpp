@@ -46,6 +46,10 @@ namespace bp3d
             bpf::fsize MaxTextureWidth;
             bpf::fsize MaxTextureHeight;
             bpf::String HardwareName;
+            bool SupportsMultiSampling;
+            bpf::uint32 MaxImageQuality;
+            bool SupportsAnisotropicFiltering;
+            bpf::uint32 MaxAnisotropicLevel;
         };
 
         class BP3D_API IDisplay

@@ -39,12 +39,23 @@ namespace bp3d
             WIREFRAME
         };
 
+        enum class BP3D_API ECullingMode
+        {
+            BACK_FACE,
+            FRONT_FACE,
+            DISABLED
+        };
+
         class BP3D_API IRenderContext
         {
         public:
             virtual ~IRenderContext() {}
             virtual IResourceAllocator &GetResourceAllocator() noexcept = 0;
-            virtual void LockConstantBuffer(Resource resource, const bpf::fint reg) noexcept = 0;
+
+            /**
+             * Note: the stage argument is only usefull for DirectX applications
+             */
+            virtual void LockConstantBuffer(Resource resource, const EShaderType stage, const bpf::fint reg) noexcept = 0;
             virtual void UpdateConstantBuffer(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
             virtual void LockTexture(Resource resource, const bpf::fint reg) noexcept = 0;
             virtual void UpdateTexture(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
@@ -55,12 +66,14 @@ namespace bp3d
             virtual void UpdateIndexBuffer(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
             virtual void LockVertexBuffer(Resource resource) noexcept = 0;
             virtual void UpdateVertexBuffer(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
+            virtual void LockVertexFormat(Resource resource) noexcept = 0;
             virtual void LockShaderProgram(Resource resource) noexcept = 0;
             virtual void Draw() noexcept = 0;
             virtual void Draw(const bpf::fsize instanceCount) noexcept = 0;
             virtual bool ReadPixels(void *output, const bpf::fsize x, const bpf::fsize y, const bpf::fsize w, const bpf::fsize h) noexcept = 0;
             virtual void SetRenderMode(const ERenderMode mode) noexcept = 0;
             virtual void EnableDepthTest(const bool flag) noexcept = 0;
+            virtual void SetCullingMode(const ECullingMode mode) noexcept = 0;
         };
     }
 }

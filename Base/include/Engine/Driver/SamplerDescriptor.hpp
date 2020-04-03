@@ -34,9 +34,11 @@ namespace bp3d
     {
         enum class BP3D_API ETextureFiltering
         {
-            NEAREST,
-            LINEAR,
-            LINEAR_MIPMAP
+            MIN_MAG_POINT_MIPMAP_POINT,
+            MIN_MAG_LINEAR_MIPMAP_LINEAR,
+            MIN_MAG_LINEAR_MIPMAP_POINT,
+            MIN_MAG_POINT_MIPMAP_LINEAR,
+            ANISOTROPIC
         };
 
         enum class BP3D_API ETextureAddressing
@@ -48,10 +50,10 @@ namespace bp3d
 
         struct BP3D_API SamplerDescriptor
         {
-            ETextureFiltering MignifyFunc;
-            ETextureFiltering MagnifyFunc;
-            ETextureAddressing AddressModeS;
-            ETextureAddressing AddressModeT;
+            ETextureFiltering FilterFunc;
+            ETextureAddressing AddressModeU;
+            ETextureAddressing AddressModeV;
+            bpf::uint32 AnisotropicLevel;
         };
     }
 }

@@ -41,12 +41,23 @@ namespace bp3d
             R_FLOAT_32
         };
 
+        enum class BP3D_API ETextureCompression
+        {
+            NONE,
+            BC1_OR_DXT1,
+            BC2_OR_DXT3,
+            BC3_OR_DXT5
+        };
+
         struct BP3D_API TextureDescriptor
         {
             ETextureFormat Format;
+            ETextureCompression Compression;
             bpf::fint MipMaps;
             bpf::fsize Width;
             bpf::fsize Height;
+            bpf::uint32 SampleLevel; //Multisampling level x2, x4, x8...
+            bpf::uint32 QualityLevel; //Quality level for multisampling; cannot be greater than MaxImageQuality
             void *Data;
         };
     }

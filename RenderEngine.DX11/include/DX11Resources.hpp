@@ -27,35 +27,34 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <Framework/Collection/ArrayList.hpp>
-#include "Engine/Driver/TextureDescriptor.hpp"
-#include "Engine/Driver/Resource.hpp"
+#include <d3d11.h>
 
-namespace bp3d
+namespace dx11
 {
-    namespace driver
+    struct Texture2D
     {
-        struct BP3D_API RenderTargetComponentDescriptor
-        {
-            /**
-             * Describes how the underlying texture should be created
-             */
-            TextureDescriptor Texture;
+        ID3D11ShaderResourceView *View;
+        ID3D11Texture2D *Texture;
+        DXGI_FORMAT Format;
+    };
 
-            /**
-             * Can we lock this render target component as a texture ?
-             */
-            bool Renderable;
-        };
+    struct RenderTarget
+    {
+        ID3D11RenderTargetView *RTView[8];
+        ID3D11DepthStencilView *DepthView;
+        UINT RTCount;
+    };
 
-        struct BP3D_API RenderTargetDescriptor
-        {
-            bpf::collection::ArrayList<Resource> Components;
+    struct DepthBuffer
+    {
+        ID3D11DepthStencilView *View;
+        ID3D11Texture2D *Texture;
+    };
 
-            /**
-             * Identifies what depth buffer to use with this render target, set to Null for none
-             */
-            Resource DepthBuffer;
-        };
-    }
+    struct ShaderProgram
+    {
+        ID3D11VertexShader *Vertex;
+        ID3D11GeometryShader *Geometry;
+        ID3D11PixelShader *Pixel;
+    };
 }

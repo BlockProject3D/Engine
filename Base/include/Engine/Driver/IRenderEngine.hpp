@@ -35,13 +35,28 @@ namespace bp3d
 {
     namespace driver
     {
+        enum class BP3D_API ETextureCubeFormat
+        {
+            /**
+             * The target API does not support cube maps
+             */
+            UNSUPPORTED,
+
+            /**
+             * Instructs the caller to store cube maps as an unwrapped cube (the same way DirectX expects it)
+             */
+            ARRAY_RIGHT_LEFT_FORWARD_BACKWARD_UP_DOWN
+        };
+
         struct BP3D_API RenderEngineProperties
         {
             bool SupportsVR;
             bool SupportsRTX;
-            bool InvertUV;
+            bool FlipTextureSpace;
+            bool SupportsRGB; //DX11 is a nightmare as RGB is not supported, this tells the engine client DLL to use RGBA and pre-compile an RGBA texture
             bpf::String DriverName;
             bpf::fint NumScreens;
+            ETextureCubeFormat CubeMapFormat;
         };
 
         class BP3D_API IRenderEngine

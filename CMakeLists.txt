@@ -15,3 +15,4 @@ set(BP_FRAMEWORK_ROOT "${CMAKE_CURRENT_LIST_DIR}/Framework-${FRAMEWORK}")
 
 add_subdirectory(Base)
 add_subdirectory(Tests)
+add_subdirectory(RenderEngine.DX11)
