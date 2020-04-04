@@ -46,6 +46,14 @@ namespace bp3d
             DISABLED
         };
 
+        enum class BP3D_API EStage
+        {
+            ALL,
+            GEOMETRY,
+            PIXEL,
+            VERTEX
+        };
+
         class BP3D_API IRenderContext
         {
         public:
@@ -55,11 +63,11 @@ namespace bp3d
             /**
              * Note: the stage argument is only usefull for DirectX applications
              */
-            virtual void LockConstantBuffer(Resource resource, const EShaderType stage, const bpf::fint reg) noexcept = 0;
+            virtual void LockConstantBuffer(Resource resource, const bpf::fint reg, const EStage stage = EStage::ALL) noexcept = 0;
             virtual void UpdateConstantBuffer(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
-            virtual void LockTexture(Resource resource, const bpf::fint reg) noexcept = 0;
+            virtual void LockTexture(Resource resource, const bpf::fint reg, const EStage stage = EStage::ALL) noexcept = 0;
             virtual void UpdateTexture(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
-            virtual void LockSampler(Resource resource) noexcept = 0;
+            virtual void LockSampler(Resource resource, const bpf::fint reg, const EStage stage = EStage::ALL) noexcept = 0;
             virtual void SetRenderTarget(Resource resource) noexcept = 0;
             virtual Resource GetRenderTarget() noexcept = 0;
             virtual void LockIndexBuffer(Resource resource) noexcept = 0;

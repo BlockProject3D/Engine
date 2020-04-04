@@ -1,0 +1,7 @@
+if (WIN32)
+    set(INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/FreeType/include)
+    set(LIB ${CMAKE_CURRENT_LIST_DIR}/FreeType/freetype.lib)
+else (WIN32)
+    find_file(INCLUDE_DIR NAME ft2build.h)
+    find_library(LIB NAME freetype)
+endif (WIN32)

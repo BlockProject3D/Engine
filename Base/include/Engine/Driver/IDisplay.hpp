@@ -49,7 +49,7 @@ namespace bp3d
             bool SupportsMultiSampling;
             bpf::uint32 MaxImageQuality;
             bool SupportsAnisotropicFiltering;
-            bpf::uint32 MaxAnisotropicLevel;
+            bpf::uint32 MaxAnisotropicLevel; //If that value is 0 consider anisotropic filtering isn't supported
         };
 
         class BP3D_API IDisplay

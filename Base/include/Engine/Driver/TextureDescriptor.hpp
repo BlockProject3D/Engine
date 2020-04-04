@@ -53,7 +53,7 @@ namespace bp3d
         {
             ETextureFormat Format;
             ETextureCompression Compression;
-            bpf::fint MipMaps;
+            bpf::fint MipMaps; //Number of mip maps to generate, set to 0 for no mip maps
             bpf::fsize Width;
             bpf::fsize Height;
             bpf::uint32 SampleLevel; //Multisampling level x2, x4, x8...
