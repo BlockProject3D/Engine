@@ -27,6 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
+#undef DOMAIN
 #include <Framework/Types.hpp>
 #include <Framework/Collection/ArrayList.hpp>
 
@@ -36,8 +37,29 @@ namespace bp3d
     {
         enum class BP3D_API EShaderType
         {
+            /**
+             * Vertex shader stage
+             */
             VERTEX,
+
+            /**
+             * Hull shader stage also called Tesselation Control stage in OpenGL
+             */
+            HULL,
+
+            /**
+             * Geometry shader stage
+             */
             GEOMETRY,
+
+            /**
+             * Domain shader stage also called Tesselation Evaluation stage in OpenGL
+             */
+            DOMAIN,
+
+            /**
+             * Pixel shader stage also called Fragment shader stage in OpenGL
+             */
             PIXEL
         };
 

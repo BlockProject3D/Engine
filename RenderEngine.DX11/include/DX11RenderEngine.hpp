@@ -27,36 +27,31 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <Framework/Types.hpp>
-#include <Framework/Collection/ArrayList.hpp>
-#include <Framework/String.hpp>
+#include <d3d11.h>
+#include <Engine/Driver/IRenderEngine.hpp>
 
-namespace bp3d
+namespace dx11
 {
-    namespace driver
+    class DX11RenderEngine final : public bp3d::driver::IRenderEngine
     {
-        enum class BP3D_API EVertexComponentType
-        {
-            VECTOR_FLOAT_4,
-            VECTOR_FLOAT_3,
-            VECTOR_FLOAT_2,
-            VECTOR_INT_4,
-            VECTOR_INT_3,
-            VECTOR_INT_2,
-            FLOAT,
-            INT
-        };
+    private:
+        bp3d::driver::RenderEngineProperties _props;
+        IDXGIFactory1 *_factory;
+        DXGI_ADAPTER_DESC1 _adapterDesc;
+        DXGI_MODE_DESC *_modes;
+        UINT _modeNum;
 
-        struct VertexComponent
-        {
-            EVertexComponentType Type;
-            bpf::String Name;
-        };
+    public:
+        DX11RenderEngine();
+        ~DX11RenderEngine();
+        bpf::memory::UniquePtr<bp3d::driver::IStandardDisplay> CreateStandardDisplay(bpf::system::IApplication &app, const bpf::String &title, const bp3d::driver::DisplayMode &mode, const bp3d::driver::RenderProperties &props);
+        bpf::memory::UniquePtr<bp3d::driver::IVRDisplay> CreateVRDisplay(bpf::system::IApplication &app, const bp3d::driver::DisplayMode &mode, const bp3d::driver::RenderProperties &props);
+        bpf::memory::UniquePtr<bp3d::driver::IShaderCompiler> CreateShaderCompiler();
+        bpf::collection::ArrayList<bp3d::driver::DisplayMode> GetDisplayModes() noexcept;
 
-        struct BP3D_API VertexFormatDescriptor
+        inline const bp3d::driver::RenderEngineProperties &GetProperties() const noexcept
         {
-            bpf::String Name;
-            bpf::collection::ArrayList<VertexComponent> Components;
-        };
-    }
+            return (_props);
+        }
+    };
 }

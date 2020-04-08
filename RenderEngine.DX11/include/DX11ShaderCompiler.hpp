@@ -27,36 +27,33 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <Framework/Types.hpp>
-#include <Framework/Collection/ArrayList.hpp>
-#include <Framework/String.hpp>
+#include <Engine/Driver/IShaderCompiler.hpp>
+#include <d3dcompiler.h>
 
-namespace bp3d
+namespace dx11
 {
-    namespace driver
+    class DX11ShaderCompiler : public bp3d::driver::IShaderCompiler
     {
-        enum class BP3D_API EVertexComponentType
-        {
-            VECTOR_FLOAT_4,
-            VECTOR_FLOAT_3,
-            VECTOR_FLOAT_2,
-            VECTOR_INT_4,
-            VECTOR_INT_3,
-            VECTOR_INT_2,
-            FLOAT,
-            INT
-        };
+    private:
+        bpf::fint _flags;
+        bpf::collection::ArrayList<D3D_SHADER_MACRO> _macros;
+        bpf::collection::ArrayList<bpf::String> _macroNames;
+        bpf::collection::ArrayList<bpf::String> _macroValues;
 
-        struct VertexComponent
+    public:
+        inline DX11ShaderCompiler()
+            : _flags(0)
         {
-            EVertexComponentType Type;
-            bpf::String Name;
-        };
+        }
 
-        struct BP3D_API VertexFormatDescriptor
+        void SetMacro(const bpf::String &name, const bpf::String &value);
+        inline void SetCompileFlags(const bpf::fint flags)
         {
-            bpf::String Name;
-            bpf::collection::ArrayList<VertexComponent> Components;
-        };
-    }
+            _flags = flags;
+        }
+        bp3d::driver::Resource Compile(const bpf::String &code, const bpf::String &name, const bp3d::driver::EShaderType type);
+        void Link();
+        bpf::io::ByteBuf GetShaderByteCode(bp3d::driver::Resource resource);
+        void FreeHandle(bp3d::driver::Resource resource);
+    };
 }

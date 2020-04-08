@@ -36,19 +36,15 @@ namespace bp3d
 {
     namespace driver
     {
-        constexpr bpf::fint SUPPORTS_PERSPECTIVE_PROJECTION = 0x1;
-        constexpr bpf::fint SUPPORTS_ORTHOGRAPHIC_PROJECTION = 0x2;
-        constexpr bpf::fint SUPPORTS_SCREEN_PROJECTION = 0x4;
-        constexpr bpf::fint HAS_VIEW_TRANSFORM = 0x8;
-
         struct BP3D_API ContextProperties
         {
+            bool SupportsMultiSampling;
+            bool SupportsAnisotropicFiltering;
             bpf::fsize MaxTextureWidth;
             bpf::fsize MaxTextureHeight;
+            bpf::fsize MaxVRAM;
             bpf::String HardwareName;
-            bool SupportsMultiSampling;
             bpf::uint32 MaxImageQuality;
-            bool SupportsAnisotropicFiltering;
             bpf::uint32 MaxAnisotropicLevel; //If that value is 0 consider anisotropic filtering isn't supported
         };
 
@@ -57,17 +53,37 @@ namespace bp3d
         public:
             virtual ~IDisplay() {}
             virtual IRenderContext &GetContext() noexcept = 0;
-            virtual void SetTitle(const bpf::String &title) noexcept = 0;
-            virtual void SetFullscreen(const bool flag) noexcept = 0;
-            virtual void Resize(const bpf::fsize width, const bpf::fsize height) noexcept = 0;
-            virtual bpf::math::Matrix4f GetPerspectiveProjection(const bpf::math::Viewportf &viewport, const bpf::fint screen) const noexcept = 0;
-            virtual bpf::math::Matrix4f GetOrthographicProjection(const bpf::math::Viewportf &viewport, const bpf::fint screen) const noexcept = 0;
-            virtual bpf::math::Matrix3f GetScreenProjection(const bpf::fint screen) const noexcept = 0;
-            virtual bpf::math::Matrix4f GetViewTransformMatrix(const bpf::fint screen) noexcept = 0;
-            virtual bpf::fint GetScreenProperties(const bpf::fint screen) const noexcept = 0;
             virtual ContextProperties GetContextProperties() const noexcept = 0;
             virtual void Update() noexcept = 0;
             virtual bool PollEvent(Event &event) noexcept = 0;
+        };
+
+        class BP3D_API IStandardDisplay : public IDisplay
+        {
+        public:
+            virtual ~IStandardDisplay() {}
+            virtual IRenderContext &GetContext() noexcept = 0;
+            virtual ContextProperties GetContextProperties() const noexcept = 0;
+            virtual void Update() noexcept = 0;
+            virtual bool PollEvent(Event &event) noexcept = 0;
+            virtual void SetTitle(const bpf::String &title) noexcept = 0;
+            virtual void SetFullscreen(const bool flag) noexcept = 0;
+            virtual void Resize(const bpf::fsize width, const bpf::fsize height) noexcept = 0;
+            virtual bpf::math::Matrix4f GetPerspectiveProjection(const bpf::math::Viewportf &viewport) const noexcept = 0;
+            virtual bpf::math::Matrix4f GetOrthographicProjection(const bpf::math::Viewportf &viewport) const noexcept = 0;
+            virtual bpf::math::Matrix3f GetScreenProjection() const noexcept = 0;
+        };
+
+        class BP3D_API IVRDisplay : public IDisplay
+        {
+        public:
+            virtual ~IVRDisplay() {}
+            virtual IRenderContext &GetContext() noexcept = 0;
+            virtual ContextProperties GetContextProperties() const noexcept = 0;
+            virtual void Update() noexcept = 0;
+            virtual bool PollEvent(Event &event) noexcept = 0;
+            virtual bpf::math::Matrix4f GetPerspectiveProjection(const bpf::math::Viewportf &viewport, const bpf::uint8 eye) const noexcept = 0;
+            virtual bpf::math::Matrix4f GetViewTransformMatrix(const bpf::uint8 eye) noexcept = 0;
         };
     }
 }

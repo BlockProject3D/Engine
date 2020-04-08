@@ -26,37 +26,11 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#pragma once
-#include <Framework/Types.hpp>
-#include <Framework/Collection/ArrayList.hpp>
-#include <Framework/String.hpp>
+#include <Framework/System/EntryPoint.hpp>
 
-namespace bp3d
+BP_SETUP_ENTRY_POINT();
+
+extern "C"
 {
-    namespace driver
-    {
-        enum class BP3D_API EVertexComponentType
-        {
-            VECTOR_FLOAT_4,
-            VECTOR_FLOAT_3,
-            VECTOR_FLOAT_2,
-            VECTOR_INT_4,
-            VECTOR_INT_3,
-            VECTOR_INT_2,
-            FLOAT,
-            INT
-        };
-
-        struct VertexComponent
-        {
-            EVertexComponentType Type;
-            bpf::String Name;
-        };
-
-        struct BP3D_API VertexFormatDescriptor
-        {
-            bpf::String Name;
-            bpf::collection::ArrayList<VertexComponent> Components;
-        };
-    }
+    __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 }

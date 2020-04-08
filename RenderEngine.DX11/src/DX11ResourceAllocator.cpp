@@ -67,7 +67,7 @@ ID3DBlob *DX11ResourceAllocator::CompileDummyShader(const bp3d::driver::VertexFo
         str += comp.Name + ":" + comp.Name.ToUpper() + ";";
     }
     bpf::String inputStruct = bpf::String("struct ") + descriptor.Name + '{' +  str + "};";
-    bpf::String outputStruct = bpf::String("struct DummyOutput{float4 Dummy: SV_POSITION;") + str + "};";
+    bpf::String outputStruct = bpf::String("struct DummyOutput{float4 Dummy:SV_POSITION;") + str + "};";
     bpf::String mainFunc = bpf::String("DummyOutput main(") + descriptor.Name + " input){DummyOutput output;output.Dummy=float4(0,0,0,0);";
     for (auto &comp : descriptor.Components)
         mainFunc += bpf::String("output.") + comp.Name + '=' + "input." + comp.Name + ';';
@@ -75,7 +75,8 @@ ID3DBlob *DX11ResourceAllocator::CompileDummyShader(const bp3d::driver::VertexFo
     bpf::String dummyShaderCode = inputStruct + outputStruct + mainFunc;
     D3D_SHADER_MACRO dummy[] = { Null, Null };
     ID3DBlob *blob;
-    if (FAILED(D3DCompile(*dummyShaderCode, dummyShaderCode.Size(), Null, dummy, Null, "main", Null, D3DCOMPILE_SKIP_VALIDATION, 0, &blob, Null)))
+    ID3DBlob *useless;
+    if (FAILED(D3DCompile(*dummyShaderCode, dummyShaderCode.Size(), Null, dummy, Null, "main", "vs_5_0", D3DCOMPILE_SKIP_VALIDATION, 0, &blob, &useless)))
         throw bpf::RuntimeException("RenderEngine", "Failed to compile vertex format");
     return (blob);
 }
@@ -332,6 +333,18 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocSampler(const bp3d::driver::S
         desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
         break;
     }
+    switch (descriptor.AddressModeW)
+    {
+    case bp3d::driver::ETextureAddressing::CLAMP_TO_EDGE:
+        desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+        break;
+    case bp3d::driver::ETextureAddressing::MIRRORED_REPEAT:
+        desc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
+        break;
+    case bp3d::driver::ETextureAddressing::REPEAT:
+        desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+        break;
+    }
     switch (descriptor.FilterFunc)
     {
     case bp3d::driver::ETextureFiltering::MIN_MAG_LINEAR_MIPMAP_LINEAR:
@@ -388,7 +401,7 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocRenderTargetComponent(const b
     desc.SampleDesc.Count = descriptor.Texture.SampleLevel;
     desc.SampleDesc.Quality = descriptor.Texture.QualityLevel;
     desc.Usage = D3D11_USAGE_DEFAULT;
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    desc.CPUAccessFlags = 0;
     if (descriptor.Renderable)
         desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
     else
@@ -522,42 +535,51 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocVertexFormat(const bp3d::driv
     auto blob = CompileDummyShader(descriptor);
     bpf::collection::Array<bpf::String> temp(descriptor.Components.Size());
     bpf::collection::Array<D3D11_INPUT_ELEMENT_DESC> desc(descriptor.Components.Size());
+    UINT offset = 0;
     for (bpf::fsize i = 0; i != descriptor.Components.Size(); ++i)
     {
         temp[i] = descriptor.Components[i].Name.ToUpper();
         desc[i].SemanticName = *temp[i];
         desc[i].SemanticIndex = 0;
+        desc[i].AlignedByteOffset = offset;
+        desc[i].InputSlot = 0;
+        desc[i].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+        desc[i].InstanceDataStepRate = 0;
         switch (descriptor.Components[i].Type)
         {
         case bp3d::driver::EVertexComponentType::FLOAT:
             desc[i].Format = DXGI_FORMAT_R32_FLOAT;
+            offset += sizeof(FLOAT);
             break;
         case bp3d::driver::EVertexComponentType::INT:
             desc[i].Format = DXGI_FORMAT_R32_SINT;
+            offset += sizeof(INT);
             break;
         case bp3d::driver::EVertexComponentType::VECTOR_FLOAT_2:
             desc[i].Format = DXGI_FORMAT_R32G32_FLOAT;
+            offset += sizeof(FLOAT) * 2;
             break;
         case bp3d::driver::EVertexComponentType::VECTOR_FLOAT_3:
             desc[i].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+            offset += sizeof(FLOAT) * 3;
             break;
         case bp3d::driver::EVertexComponentType::VECTOR_FLOAT_4:
             desc[i].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+            offset += sizeof(FLOAT) * 4;
             break;
         case bp3d::driver::EVertexComponentType::VECTOR_INT_2:
             desc[i].Format = DXGI_FORMAT_R32G32_SINT;
+            offset += sizeof(INT) * 2;
             break;
         case bp3d::driver::EVertexComponentType::VECTOR_INT_3:
             desc[i].Format = DXGI_FORMAT_R32G32B32_SINT;
+            offset += sizeof(INT) * 3;
             break;
         case bp3d::driver::EVertexComponentType::VECTOR_INT_4:
             desc[i].Format = DXGI_FORMAT_R32G32B32A32_SINT;
+            offset += sizeof(INT) * 4;
             break;
         }
-        desc[i].InputSlot = (UINT)i;
-        desc[i].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-        desc[i].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-        desc[i].InstanceDataStepRate = 0;
     }
     if (FAILED(_device->CreateInputLayout(*desc, (UINT)descriptor.Components.Size(), blob->GetBufferPointer(), blob->GetBufferSize(), &format)))
     {
@@ -572,6 +594,7 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocVertexBuffer(const bp3d::driv
     D3D11_BUFFER_DESC desc;
     D3D11_SUBRESOURCE_DATA data;
     ID3D11Buffer *buf;
+    ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
     desc.ByteWidth = (UINT)buffer.Size;
     switch (type)
     {
@@ -598,6 +621,7 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocIndexBuffer(const bp3d::drive
     D3D11_BUFFER_DESC desc;
     D3D11_SUBRESOURCE_DATA data;
     ID3D11Buffer *buf;
+    ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
     desc.ByteWidth = (UINT)descriptor.Size;
     switch (type)
     {
@@ -624,6 +648,8 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocShaderProgram(const bp3d::dri
     ID3D11VertexShader *vertex = Null;
     ID3D11PixelShader *pixel = Null;
     ID3D11GeometryShader *geometry = Null;
+    ID3D11HullShader *hull = Null;
+    ID3D11DomainShader *domain = Null;
     for (auto &desc : descriptor.Shaders)
     {
         switch (desc.Type)
@@ -631,17 +657,26 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocShaderProgram(const bp3d::dri
         case bp3d::driver::EShaderType::GEOMETRY:
             if (FAILED(_device->CreateGeometryShader(desc.Data, desc.Size, Null, &geometry)))
                 goto errorCleanup;
-            goto linkProg;
+            break;
         case bp3d::driver::EShaderType::PIXEL:
             if (FAILED(_device->CreatePixelShader(desc.Data, desc.Size, Null, &pixel)))
                 goto errorCleanup;
-            goto linkProg;
+            break;
         case bp3d::driver::EShaderType::VERTEX:
             if (FAILED(_device->CreateVertexShader(desc.Data, desc.Size, Null, &vertex)))
                 goto errorCleanup;
-            goto linkProg;
+            break;
+        case bp3d::driver::EShaderType::HULL:
+            if (FAILED(_device->CreateHullShader(desc.Data, desc.Size, Null, &hull)))
+                goto errorCleanup;
+            break;
+        case bp3d::driver::EShaderType::DOMAIN:
+            if (FAILED(_device->CreateDomainShader(desc.Data, desc.Size, Null, &domain)))
+                goto errorCleanup;
+            break;
         }
     }
+    goto linkProg;
 
 errorCleanup:
     if (vertex != Null)
@@ -650,6 +685,10 @@ errorCleanup:
         pixel->Release();
     if (geometry != Null)
         geometry->Release();
+    if (hull != Null)
+        hull->Release();
+    if (domain != Null)
+        domain->Release();
     throw bpf::RuntimeException("RenderEngine", "Could not load shader");
 
 linkProg:
@@ -657,7 +696,93 @@ linkProg:
     prog->Geometry = geometry;
     prog->Pixel = pixel;
     prog->Vertex = vertex;
+    prog->Domain = domain;
+    prog->Hull = hull;
     return (prog);
+}
+
+D3D11_BLEND_OP DX11ResourceAllocator::TranslateBlendOp(const bp3d::driver::EBlendOp op)
+{
+    switch (op)
+    {
+    case bp3d::driver::EBlendOp::ADD:
+        return (D3D11_BLEND_OP_ADD);
+    case bp3d::driver::EBlendOp::SUBTRACT:
+        return (D3D11_BLEND_OP_SUBTRACT);
+    case bp3d::driver::EBlendOp::INVERSE_SUBTRACT:
+        return (D3D11_BLEND_OP_REV_SUBTRACT);
+    case bp3d::driver::EBlendOp::MIN:
+        return (D3D11_BLEND_OP_MIN);
+    case bp3d::driver::EBlendOp::MAX:
+        return (D3D11_BLEND_OP_MAX);
+    }
+    return (D3D11_BLEND_OP_ADD);
+}
+
+D3D11_BLEND DX11ResourceAllocator::TranslateBlendFactor(const bp3d::driver::EBlendFactor factor)
+{
+    switch (factor)
+    {
+    case bp3d::driver::EBlendFactor::ZERO:
+        return (D3D11_BLEND_ZERO);
+    case bp3d::driver::EBlendFactor::ONE:
+        return (D3D11_BLEND_ONE);
+    case bp3d::driver::EBlendFactor::DST_ALPHA:
+        return (D3D11_BLEND_DEST_ALPHA);
+    case bp3d::driver::EBlendFactor::DST_COLOR:
+        return (D3D11_BLEND_DEST_COLOR);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_DST_ALPHA:
+        return (D3D11_BLEND_INV_DEST_ALPHA);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_DST_COLOR:
+        return (D3D11_BLEND_INV_DEST_COLOR);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_SRC_ALPHA:
+        return (D3D11_BLEND_INV_SRC_ALPHA);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_SRC_COLOR:
+        return (D3D11_BLEND_INV_SRC_COLOR);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_SRC1_ALPHA:
+        return (D3D11_BLEND_INV_SRC1_ALPHA);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_SRC1_COLOR:
+        return (D3D11_BLEND_INV_SRC1_COLOR);
+    case bp3d::driver::EBlendFactor::SRC1_COLOR:
+        return (D3D11_BLEND_SRC1_COLOR);
+    case bp3d::driver::EBlendFactor::SRC_ALPHA_SATURATE:
+        return (D3D11_BLEND_SRC_ALPHA_SAT);
+    case bp3d::driver::EBlendFactor::SRC1_ALPHA:
+        return (D3D11_BLEND_SRC1_ALPHA);
+    case bp3d::driver::EBlendFactor::SRC_COLOR:
+        return (D3D11_BLEND_SRC_COLOR);
+    case bp3d::driver::EBlendFactor::SRC_ALPHA:
+        return (D3D11_BLEND_SRC_ALPHA);
+    }
+    return (D3D11_BLEND_ZERO);
+}
+
+bp3d::driver::Resource DX11ResourceAllocator::AllocBlendState(const bp3d::driver::BlendStateDescriptor &descriptor)
+{
+    ID3D11BlendState *state;
+    D3D11_BLEND_DESC desc;
+    ZeroMemory(&desc, sizeof(D3D11_BLEND_DESC));
+    UINT i = 0;
+    for (auto &target : descriptor.Components)
+    {
+        desc.RenderTarget[i].BlendEnable = target.Enable;
+        desc.RenderTarget[i].BlendOp = TranslateBlendOp(target.ColorOp);
+        desc.RenderTarget[i].BlendOpAlpha = TranslateBlendOp(target.AlphaOp);
+        desc.RenderTarget[i].SrcBlend = TranslateBlendFactor(target.SrcColor);
+        desc.RenderTarget[i].DestBlend = TranslateBlendFactor(target.DstColor);
+        desc.RenderTarget[i].SrcBlendAlpha = TranslateBlendFactor(target.SrcAlpha);
+        desc.RenderTarget[i].DestBlendAlpha = TranslateBlendFactor(target.DstAlpha);
+        ++i;
+    }
+    if (FAILED(_device->CreateBlendState(&desc, &state)))
+        throw bpf::RuntimeException("RenderEngine", "CreateBlendState failed");
+    return (state);
+}
+
+void DX11ResourceAllocator::FreeBlendState(bp3d::driver::Resource resource)
+{
+    ID3D11BlendState *state = reinterpret_cast<ID3D11BlendState *>(resource);
+    state->Release();
 }
 
 void DX11ResourceAllocator::FreeVertexFormat(bp3d::driver::Resource resource)

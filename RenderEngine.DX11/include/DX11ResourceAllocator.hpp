@@ -41,8 +41,16 @@ namespace dx11
 
         void SetupTextureFormat(const bp3d::driver::TextureDescriptor &descriptor, D3D11_TEXTURE2D_DESC &desc, UINT &sysmempitch, UINT &sysmemslicepitch, D3D11_SHADER_RESOURCE_VIEW_DESC &shaderDesc);
         ID3DBlob *CompileDummyShader(const bp3d::driver::VertexFormatDescriptor &descriptor);
+        D3D11_BLEND_OP TranslateBlendOp(const bp3d::driver::EBlendOp op);
+        D3D11_BLEND TranslateBlendFactor(const bp3d::driver::EBlendFactor factor);
+
     public:
-        ~DX11ResourceAllocator();
+        inline DX11ResourceAllocator(ID3D11Device *dev, ID3D11DeviceContext *devContext)
+            : _device(dev)
+            , _deviceContext(devContext)
+        {
+        }
+
         bp3d::driver::Resource AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height);
         bp3d::driver::Resource AllocTexture2D(const bp3d::driver::EBufferType type, const bp3d::driver::TextureDescriptor &descriptor);
         bp3d::driver::Resource AllocTexture2DArray(const bp3d::driver::EBufferType type, const bp3d::driver::TextureDescriptor &descriptor, const bpf::fsize layers);
@@ -55,6 +63,8 @@ namespace dx11
         bp3d::driver::Resource AllocVertexBuffer(const bp3d::driver::EBufferType type, bp3d::driver::Resource vformat, const bp3d::driver::BufferDescriptor &buffer);
         bp3d::driver::Resource AllocIndexBuffer(const bp3d::driver::EBufferType type, const bp3d::driver::BufferDescriptor &descriptor);
         bp3d::driver::Resource AllocShaderProgram(const bp3d::driver::ShaderProgramDescriptor &descriptor);
+        bp3d::driver::Resource AllocBlendState(const bp3d::driver::BlendStateDescriptor &descriptor);
+        void FreeBlendState(bp3d::driver::Resource resource);
         void FreeVertexFormat(bp3d::driver::Resource resource);
         void FreeDepthBuffer(bp3d::driver::Resource resource);
         void FreeTexture2D(bp3d::driver::Resource resource);

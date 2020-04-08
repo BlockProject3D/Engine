@@ -30,6 +30,7 @@
 #include <Framework/Memory/UniquePtr.hpp>
 #include <Framework/System/IApplication.hpp>
 #include "Engine/Driver/IDisplay.hpp"
+#include "Engine/Driver/IShaderCompiler.hpp"
 
 namespace bp3d
 {
@@ -50,21 +51,85 @@ namespace bp3d
 
         struct BP3D_API RenderEngineProperties
         {
-            bool SupportsVR;
+            /**
+             * Does this renderer supports raytracing
+             * Currently all renderers will have false here
+             */
             bool SupportsRTX;
+
+            /**
+             * Should the caller flip texture space
+             * If FlipTextureSpace is true then (0, 0) is the bottom left corner of the texture
+             * The default of the caller is expected to be (0, 0) as the top left corner
+             */
             bool FlipTextureSpace;
-            bool SupportsRGB; //DX11 is a nightmare as RGB is not supported, this tells the engine client DLL to use RGBA and pre-compile an RGBA texture
+
+            /**
+             * Does this renderer supports RGB textures/render targets
+             */
+            bool SupportsRGB;
+
+            /**
+             * Should we call LockVertexFormat before LockVertexBuffer in order to set the current expected input layout for the shader stage
+             * Currently, GL sets this to false as GL combines vertex format and vertex buffer
+             */
+            bool SeparateVertexFormat;
+
+            /**
+             * The name of this render driver (ex: DirectX 11, OpenGL 4.0, ...)
+             */
             bpf::String DriverName;
-            bpf::fint NumScreens;
+
+            /**
+             * The expected format of the texture buffer for loading a cube map
+             */
             ETextureCubeFormat CubeMapFormat;
+        };
+
+        struct BP3D_API RenderProperties
+        {
+            bool VSync;
+            bool Antialiasing;
+            bool Multisampling;
+        };
+
+        struct BP3D_API DisplayMode
+        {
+            /**
+             * Is this display a VR device
+             */
+            bool IsVR;
+
+            /**
+             * Is this display full screen
+             */
+            bool Fullscreen;
+
+            /**
+             * Width of the display
+             */
+            bpf::fsize Width;
+
+            /**
+             * Height of the display
+             */
+            bpf::fsize Height;
+
+            /**
+             * Identifier for the render engine implementation
+             */
+            bpf::fsize Id;
         };
 
         class BP3D_API IRenderEngine
         {
         public:
             virtual ~IRenderEngine() {}
-            virtual bpf::memory::UniquePtr<IDisplay> CreateDisplay(bpf::system::IApplication &app, const bpf::String &title, const bpf::fsize width, const bpf::fsize height) = 0;
-            virtual RenderEngineProperties GetProperties() const noexcept = 0;
+            virtual bpf::memory::UniquePtr<IStandardDisplay> CreateStandardDisplay(bpf::system::IApplication &app, const bpf::String &title, const DisplayMode &mode, const RenderProperties &props) = 0;
+            virtual bpf::memory::UniquePtr<IVRDisplay> CreateVRDisplay(bpf::system::IApplication &app, const DisplayMode &mode, const RenderProperties &props) = 0;
+            virtual bpf::memory::UniquePtr<IShaderCompiler> CreateShaderCompiler() = 0;
+            virtual bpf::collection::ArrayList<DisplayMode> GetDisplayModes() noexcept = 0;
+            virtual const RenderEngineProperties &GetProperties() const noexcept = 0;
         };
     }
 }

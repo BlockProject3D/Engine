@@ -16,6 +16,8 @@ set(SOURCES
     include/Engine/Driver/ShaderProgramDescriptor.hpp
     include/Engine/Driver/TextureDescriptor.hpp
     include/Engine/Driver/VertexFormatDescriptor.hpp
+    include/Engine/Driver/BlendStateDescriptor.hpp
+    include/Engine/Driver/IShaderCompiler.hpp
     include/Engine/Input/EKey.hpp
     include/Engine/Asset/ConstantBuffer.hpp
     include/Engine/Asset/Model.hpp

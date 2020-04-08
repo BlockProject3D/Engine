@@ -56,5 +56,7 @@ namespace dx11
         ID3D11VertexShader *Vertex;
         ID3D11GeometryShader *Geometry;
         ID3D11PixelShader *Pixel;
+        ID3D11HullShader *Hull;
+        ID3D11DomainShader *Domain;
     };
 }

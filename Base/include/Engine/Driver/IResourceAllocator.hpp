@@ -33,6 +33,7 @@
 #include "Engine/Driver/RenderTargetDescriptor.hpp"
 #include "Engine/Driver/BufferDescriptor.hpp"
 #include "Engine/Driver/VertexFormatDescriptor.hpp"
+#include "Engine/Driver/BlendStateDescriptor.hpp"
 #include "Engine/Driver/Resource.hpp"
 
 namespace bp3d
@@ -60,9 +61,12 @@ namespace bp3d
             virtual Resource AllocRenderTarget(const RenderTargetDescriptor &descriptor) = 0;
             virtual Resource AllocConstantBuffer(const EBufferType type, const BufferDescriptor &descriptor) = 0;
             virtual Resource AllocVertexFormat(const VertexFormatDescriptor &vformat) = 0;
-            virtual Resource AllocVertexBuffer(const EBufferType type, const BufferDescriptor &buffer) = 0;
+            virtual Resource AllocVertexBuffer(const EBufferType type, Resource vformat, const BufferDescriptor &buffer) = 0;
             virtual Resource AllocIndexBuffer(const EBufferType type, const BufferDescriptor &descriptor) = 0;
             virtual Resource AllocShaderProgram(const ShaderProgramDescriptor &descriptor) = 0;
+            virtual Resource AllocBlendState(const BlendStateDescriptor &descriptor) = 0;
+
+            virtual void FreeBlendState(Resource resource) = 0;
 
             virtual void FreeVertexFormat(Resource resource) = 0;
 
@@ -84,7 +88,7 @@ namespace bp3d
              * Request free of a cube map
              * @param resource the resource to free
              */
-            virtual void FreeTexturpeCube(Resource resource) = 0;
+            virtual void FreeTextureCube(Resource resource) = 0;
 
             /**
              * Request free of a sampler object

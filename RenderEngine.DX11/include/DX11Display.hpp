@@ -27,36 +27,44 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <Framework/Types.hpp>
-#include <Framework/Collection/ArrayList.hpp>
-#include <Framework/String.hpp>
+#include <Engine/Driver/IDisplay.hpp>
+#include <SDL2/SDL.h>
+#include "DX11RenderContext.hpp"
 
-namespace bp3d
+namespace dx11
 {
-    namespace driver
+    class DX11StandardDisplay final : public bp3d::driver::IStandardDisplay
     {
-        enum class BP3D_API EVertexComponentType
-        {
-            VECTOR_FLOAT_4,
-            VECTOR_FLOAT_3,
-            VECTOR_FLOAT_2,
-            VECTOR_INT_4,
-            VECTOR_INT_3,
-            VECTOR_INT_2,
-            FLOAT,
-            INT
-        };
+    private:
+        IDXGISwapChain *_chain;
+        ID3D11Device *_device;
+        ID3D11DeviceContext *_deviceContext;
+        DX11RenderContext _context;
+        bp3d::driver::ContextProperties _props;
+        SDL_Window *_window;
+        bp3d::driver::Resource _depthBuffer;
 
-        struct VertexComponent
-        {
-            EVertexComponentType Type;
-            bpf::String Name;
-        };
+    public:
+        DX11StandardDisplay(IDXGISwapChain *swap, ID3D11Device *dev, ID3D11DeviceContext *devContext, const bp3d::driver::ContextProperties &cprops, const bp3d::driver::RenderProperties &rprops, SDL_Window *window);
+        ~DX11StandardDisplay();
 
-        struct BP3D_API VertexFormatDescriptor
+        inline bp3d::driver::IRenderContext &GetContext() noexcept
         {
-            bpf::String Name;
-            bpf::collection::ArrayList<VertexComponent> Components;
-        };
-    }
+            return (_context);
+        }
+
+        inline bp3d::driver::ContextProperties GetContextProperties() const noexcept
+        {
+            return (_props);
+        }
+
+        void Update() noexcept;
+        bool PollEvent(bp3d::driver::Event &event) noexcept;
+        void SetTitle(const bpf::String &title) noexcept;
+        void SetFullscreen(const bool flag) noexcept;
+        void Resize(const bpf::fsize width, const bpf::fsize height) noexcept;
+        bpf::math::Matrix4f GetPerspectiveProjection(const bpf::math::Viewportf &viewport) const noexcept;
+        bpf::math::Matrix4f GetOrthographicProjection(const bpf::math::Viewportf &viewport) const noexcept;
+        bpf::math::Matrix3f GetScreenProjection() const noexcept;
+    };
 }

@@ -27,36 +27,54 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <Framework/Types.hpp>
 #include <Framework/Collection/ArrayList.hpp>
-#include <Framework/String.hpp>
 
 namespace bp3d
 {
     namespace driver
     {
-        enum class BP3D_API EVertexComponentType
+        enum class BP3D_API EBlendOp
         {
-            VECTOR_FLOAT_4,
-            VECTOR_FLOAT_3,
-            VECTOR_FLOAT_2,
-            VECTOR_INT_4,
-            VECTOR_INT_3,
-            VECTOR_INT_2,
-            FLOAT,
-            INT
+            ADD,
+            SUBTRACT,
+            INVERSE_SUBTRACT,
+            MIN,
+            MAX
         };
 
-        struct VertexComponent
+        enum class BP3D_API EBlendFactor
         {
-            EVertexComponentType Type;
-            bpf::String Name;
+            ZERO,
+            ONE,
+            SRC_COLOR,
+            ONE_MINUS_SRC_COLOR,
+            SRC_ALPHA,
+            ONE_MINUS_SRC_ALPHA,
+            DST_COLOR,
+            ONE_MINUS_DST_COLOR,
+            DST_ALPHA,
+            ONE_MINUS_DST_ALPHA,
+            SRC_ALPHA_SATURATE,
+            SRC1_COLOR,
+            ONE_MINUS_SRC1_COLOR,
+            SRC1_ALPHA,
+            ONE_MINUS_SRC1_ALPHA
         };
 
-        struct BP3D_API VertexFormatDescriptor
+        struct BP3D_API RenderTargetComponentBlendState
         {
-            bpf::String Name;
-            bpf::collection::ArrayList<VertexComponent> Components;
+            bool Enable;
+            EBlendFactor SrcColor;
+            EBlendFactor DstColor;
+            EBlendFactor SrcAlpha;
+            EBlendFactor DstAlpha;
+            EBlendOp ColorOp;
+            EBlendOp AlphaOp;
+        };
+
+        struct BP3D_API BlendStateDescriptor
+        {
+            bpf::collection::ArrayList<RenderTargetComponentBlendState> Components;
         };
     }
 }

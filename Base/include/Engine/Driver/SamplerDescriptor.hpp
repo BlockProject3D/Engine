@@ -53,6 +53,7 @@ namespace bp3d
             ETextureFiltering FilterFunc;
             ETextureAddressing AddressModeU;
             ETextureAddressing AddressModeV;
+            ETextureAddressing AddressModeW;
             bpf::uint32 AnisotropicLevel;
         };
     }
