@@ -7,7 +7,8 @@ include("../CMakes/ThirdParty.cmake")
 set(SOURCES
     include/GL40ResourceAllocator.hpp
     include/glad.h
-	include/KHR/khrplatform.h
+    include/KHR/khrplatform.h
+    include/GL40Resources.hpp
     src/glad.c
     src/GL40ResourceAllocator.cpp
 )

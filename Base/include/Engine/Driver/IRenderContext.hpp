@@ -75,7 +75,7 @@ namespace bp3d
             virtual void LockVertexBuffer(Resource resource, const bpf::uint32 vertexSize) noexcept = 0;
             virtual void UpdateVertexBuffer(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
             virtual void LockVertexFormat(Resource resource) noexcept = 0;
-            virtual void LockShaderProgram(Resource resource) noexcept = 0;
+            virtual void LockShaderProgram(Resource resource, const int stageFlags = LOCK_ALL_STAGE) noexcept = 0;
             virtual void LockBlendState(Resource resource, const bpf::math::Vector4f &factor) noexcept = 0;
             virtual void DrawPatches(const bpf::uint32 index, const bpf::uint32 count, const bpf::uint8 controlPoints) noexcept = 0;
             virtual void Draw(const bpf::uint32 index, const bpf::uint32 count) noexcept = 0;

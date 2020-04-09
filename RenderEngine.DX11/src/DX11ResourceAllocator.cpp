@@ -437,7 +437,7 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocRenderTargetComponent(const b
     return (tex);
 }
 
-bp3d::driver::Resource DX11ResourceAllocator::AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height)
+bp3d::driver::Resource DX11ResourceAllocator::AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height, const bp3d::driver::EDepthBufferFormat format)
 {
     ID3D11Texture2D *tex;
     ID3D11DepthStencilView *view;
@@ -449,7 +449,18 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocDepthBuffer(const bpf::fsize 
     desc.Height = (UINT)height;
     desc.MipLevels = 1;
     desc.ArraySize = 1;
-    desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    switch (format)
+    {
+    case bp3d::driver::EDepthBufferFormat::FLOAT_24_STENCIL_8:
+        desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        break;
+    case bp3d::driver::EDepthBufferFormat::FLOAT_32_STENCIL_8:
+        desc.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+        break;
+    case bp3d::driver::EDepthBufferFormat::FLOAT_32:
+        desc.Format = DXGI_FORMAT_D32_FLOAT;
+        break;
+    }
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
     desc.Usage = D3D11_USAGE_DEFAULT;

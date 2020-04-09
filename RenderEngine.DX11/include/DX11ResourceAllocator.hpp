@@ -51,7 +51,7 @@ namespace dx11
         {
         }
 
-        bp3d::driver::Resource AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height);
+        bp3d::driver::Resource AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height, const bp3d::driver::EDepthBufferFormat format);
         bp3d::driver::Resource AllocTexture2D(const bp3d::driver::EBufferType type, const bp3d::driver::TextureDescriptor &descriptor);
         bp3d::driver::Resource AllocTexture2DArray(const bp3d::driver::EBufferType type, const bp3d::driver::TextureDescriptor &descriptor, const bpf::fsize layers);
         bp3d::driver::Resource AllocTextureCube(const bp3d::driver::EBufferType type, const bp3d::driver::TextureDescriptor &descriptor);

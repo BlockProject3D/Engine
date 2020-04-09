@@ -45,7 +45,7 @@ DX11StandardDisplay::DX11StandardDisplay(IDXGISwapChain *swap, ID3D11Device *dev
     int w;
     int h;
     SDL_GetWindowSize(_window, &w, &h);
-    _depthBuffer = _context.GetResourceAllocator().AllocDepthBuffer((bpf::fsize)w, (bpf::fsize)h);
+    _depthBuffer = _context.GetResourceAllocator().AllocDepthBuffer((bpf::fsize)w, (bpf::fsize)h, bp3d::driver::EDepthBufferFormat::FLOAT_24_STENCIL_8);
     ID3D11Texture2D *buf;
     _chain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID *)&buf);
     _context.SetBackBuffer(_depthBuffer, buf);

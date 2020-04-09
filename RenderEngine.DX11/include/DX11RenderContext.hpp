@@ -87,7 +87,7 @@ namespace dx11
         void LockVertexBuffer(bp3d::driver::Resource resource, const bpf::uint32 vertexSize) noexcept;
         void UpdateVertexBuffer(bp3d::driver::Resource resource, const void *data, const bpf::fsize size) noexcept;
         void LockVertexFormat(bp3d::driver::Resource resource) noexcept;
-        void LockShaderProgram(bp3d::driver::Resource resource) noexcept;
+        void LockShaderProgram(bp3d::driver::Resource resource, const int stageFlags) noexcept;
         void LockBlendState(bp3d::driver::Resource resource, const bpf::math::Vector4f &factor) noexcept;
         void DrawPatches(const bpf::uint32 index, const bpf::uint32 count, const bpf::uint8 controlPoints) noexcept;
         void Draw(const bpf::uint32 index, const bpf::uint32 count) noexcept;

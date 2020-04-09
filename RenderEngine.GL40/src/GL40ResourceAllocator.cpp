@@ -197,6 +197,7 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocSampler(const bp3d::driver::S
         glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
         break;
     }
+    //TODO: Setup AddressModeU/V/W
     ObjectResource res;
 #ifdef X86_64
     res.Ptrs[0] = sampler;
@@ -233,12 +234,15 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocRenderTargetComponent(const b
 #endif
 }
 
-bp3d::driver::Resource GL40ResourceAllocator::AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height)
+bp3d::driver::Resource GL40ResourceAllocator::AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height, const bp3d::driver::EDepthBufferFormat format)
 {
     GLuint rbo;
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, (GLsizei)width, (GLsizei)height);
+    if (format == bp3d::driver::EDepthBufferFormat::FLOAT_32_STENCIL_8)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH32F_STENCIL8, (GLsizei)width, (GLsizei)height);
+    else
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, (GLsizei)width, (GLsizei)height);
     ObjectResource res;
 #ifdef X86_64
     res.Ptrs[0] = rbo;
@@ -521,6 +525,22 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocShaderProgram(const bp3d::dri
     res.Ptr = prog;
 #endif
     return (res.Data);
+}
+
+bp3d::driver::Resource GL40ResourceAllocator::AllocBlendState(const bp3d::driver::BlendStateDescriptor &descriptor)
+{
+    if (descriptor.Components.Size() == 0)
+        throw bpf::RuntimeException("RenderEngine", "Can't allocate a Null blend state");
+    auto com = descriptor.Components[0];
+    BlendState *state = static_cast<BlendState *>(bpf::memory::Memory::Malloc(sizeof(BlendState)));
+    state->Enable = com.Enable;
+    //TODO: Finish
+    return (state);
+}
+
+void GL40ResourceAllocator::FreeBlendState(bp3d::driver::Resource resource)
+{
+    bpf::memory::Memory::Free(resource);
 }
 
 void GL40ResourceAllocator::FreeDepthBuffer(bp3d::driver::Resource resource)

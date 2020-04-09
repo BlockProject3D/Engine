@@ -124,6 +124,7 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
         writer << "FlipTextureSpace = " << props.FlipTextureSpace << newLine;
         writer << "SupportsRGB = " << props.SupportsRGB << newLine;
         writer << "SeparateVertexFormat = " << props.SeparateVertexFormat << newLine;
+        writer << "SupportsMultiBlending = " << props.SupportsMultiBlending << newLine;
         writer.WriteLine("Listing display modes...");
         auto modes = ptr->GetDisplayModes();
         bp3d::driver::DisplayMode wanted;
@@ -177,7 +178,7 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
         auto sampler = AttemptBuildSampler(display->GetContext().GetResourceAllocator());
         display->GetContext().SetViewport(0, 0, 1920U, 1080U);
         display->GetContext().LockVertexFormat(vertex2d);
-        display->GetContext().LockShaderProgram(shader);
+        display->GetContext().LockShaderProgram(shader, bp3d::driver::LOCK_VERTEX_STAGE | bp3d::driver::LOCK_PIXEL_STAGE);
         display->GetContext().LockVertexBuffer(vbuf, 4 * sizeof(float));
         display->GetContext().LockTexture(texture, 0, bp3d::driver::LOCK_PIXEL_STAGE);
         display->GetContext().LockSampler(sampler, 0, bp3d::driver::LOCK_PIXEL_STAGE);

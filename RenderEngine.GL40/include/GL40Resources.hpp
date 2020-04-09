@@ -76,6 +76,17 @@ namespace gl40
         GLsizei Stride;
     };
 
+    struct BlendState
+    {
+        GLenum SrcColor;
+        GLenum DstColor;
+        GLenum SrcAlpha;
+        GLenum DstAlpha;
+        GLenum AlphaOp;
+        GLenum ColorOp;
+        bool Enable;
+    };
+
 #ifdef X86
     struct Texture2D
     {

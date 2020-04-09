@@ -48,6 +48,9 @@ DX11RenderEngine::DX11RenderEngine()
     _props.SupportsRGB = false;
     _props.SupportsRTX = false;
     _props.SeparateVertexFormat = true;
+    _props.SupportsMultiBlending = true;
+    _props.IndependentStage = true;
+    _props.Supports32FloatDepth = true;
     if (FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void **)(&_factory))))
     {
         _factory = Null;

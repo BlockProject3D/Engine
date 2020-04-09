@@ -40,6 +40,13 @@ namespace bp3d
 {
     namespace driver
     {
+        enum class BP3D_API EDepthBufferFormat
+        {
+            FLOAT_32_STENCIL_8,
+            FLOAT_24_STENCIL_8,
+            FLOAT_32
+        };
+
         /**
          * The main allocator class for GPU resources
          * Usually the use of raw pointers and Free* style of functions is bad in C++ but here we have no other ways
@@ -52,7 +59,7 @@ namespace bp3d
         {
         public:
             virtual ~IResourceAllocator() {}
-            virtual Resource AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height) = 0;
+            virtual Resource AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height, const EDepthBufferFormat format) = 0;
             virtual Resource AllocTexture2D(const EBufferType type, const TextureDescriptor &descriptor) = 0;
             virtual Resource AllocTexture2DArray(const EBufferType type, const TextureDescriptor &descriptor, const bpf::fsize layers) = 0;
             virtual Resource AllocTextureCube(const EBufferType type, const TextureDescriptor &descriptor) = 0;

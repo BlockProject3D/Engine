@@ -257,29 +257,19 @@ void DX11RenderContext::LockVertexFormat(bp3d::driver::Resource resource) noexce
     _deviceContext->IASetInputLayout(var);
 }
 
-void DX11RenderContext::LockShaderProgram(bp3d::driver::Resource resource) noexcept
+void DX11RenderContext::LockShaderProgram(bp3d::driver::Resource resource, const int stageFlags) noexcept
 {
     auto var = reinterpret_cast<ShaderProgram *>(resource);
-    if (var->Geometry != Null)
+    if (stageFlags & bp3d::driver::LOCK_GEOMETRY_STAGE)
         _deviceContext->GSSetShader(var->Geometry, Null, 0);
-    else
-        _deviceContext->GSSetShader(Null, Null, 0);
-    if (var->Pixel != Null)
+    if (stageFlags & bp3d::driver::LOCK_PIXEL_STAGE)
         _deviceContext->PSSetShader(var->Pixel, Null, 0);
-    else
-        _deviceContext->PSSetShader(Null, Null, 0);
-    if (var->Vertex != Null)
+    if (stageFlags & bp3d::driver::LOCK_VERTEX_STAGE)
         _deviceContext->VSSetShader(var->Vertex, Null, 0);
-    else
-        _deviceContext->VSSetShader(Null, Null, 0);
-    if (var->Hull != Null)
+    if (stageFlags & bp3d::driver::LOCK_HULL_STAGE)
         _deviceContext->HSSetShader(var->Hull, Null, 0);
-    else
-        _deviceContext->HSSetShader(Null, Null, 0);
-    if (var->Domain != Null)
+    if (stageFlags & bp3d::driver::LOCK_DOMAIN_STAGE)
         _deviceContext->DSSetShader(var->Domain, Null, 0);
-    else
-        _deviceContext->DSSetShader(Null, Null, 0);
 }
 
 void DX11RenderContext::Draw(const bpf::uint32 index, const bpf::uint32 count) noexcept

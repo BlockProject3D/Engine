@@ -76,6 +76,22 @@ namespace bp3d
             bool SeparateVertexFormat;
 
             /**
+             * Typically set to true for DirectX renderers which support setting blend state for a single render target slot
+             * GL renderers will have this value set to false and instead the first component inside a blend state will be used for ALL render target slots
+             */
+            bool SupportsMultiBlending;
+
+            /**
+             * Bool set to true if the underlying rendering API allows independent shader stages
+             */
+            bool IndependentStage;
+
+            /**
+             * True if the renderer supports 32 bits pure float (without stencil) as depth buffer format
+             */
+            bool Supports32FloatDepth;
+
+            /**
              * The name of this render driver (ex: DirectX 11, OpenGL 4.0, ...)
              */
             bpf::String DriverName;
