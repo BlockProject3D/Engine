@@ -28,6 +28,7 @@
 
 #pragma once
 #include <Framework/Collection/ArrayList.hpp>
+#include <Framework/Math/Vector.hpp>
 
 namespace bp3d
 {
@@ -75,6 +76,7 @@ namespace bp3d
         struct BP3D_API BlendStateDescriptor
         {
             bpf::collection::ArrayList<RenderTargetComponentBlendState> Components;
+            bpf::math::Vector4f Factor;
         };
     }
 }

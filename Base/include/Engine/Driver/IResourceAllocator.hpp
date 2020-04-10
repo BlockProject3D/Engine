@@ -34,6 +34,7 @@
 #include "Engine/Driver/BufferDescriptor.hpp"
 #include "Engine/Driver/VertexFormatDescriptor.hpp"
 #include "Engine/Driver/BlendStateDescriptor.hpp"
+#include "Engine/Driver/PipelineDescriptor.hpp"
 #include "Engine/Driver/Resource.hpp"
 
 namespace bp3d
@@ -72,10 +73,11 @@ namespace bp3d
             virtual Resource AllocIndexBuffer(const EBufferType type, const BufferDescriptor &descriptor) = 0;
             virtual Resource AllocShaderProgram(const ShaderProgramDescriptor &descriptor) = 0;
             virtual Resource AllocBlendState(const BlendStateDescriptor &descriptor) = 0;
-
-            virtual void FreeBlendState(Resource resource) = 0;
+            virtual Resource AllocPipeline(const PipelineDescriptor &descriptor) = 0;
 
             virtual void FreeVertexFormat(Resource resource) = 0;
+
+            virtual void FreePipeline(Resource resource) = 0;
 
             virtual void FreeDepthBuffer(Resource resource) = 0;
 
@@ -133,12 +135,6 @@ namespace bp3d
              * @param resource the resource to free
              */
             virtual void FreeIndexBuffer(Resource resource) = 0;
-
-            /**
-             * Request free of a shader program
-             * @param resource the resource to free
-             */
-            virtual void FreeShaderProgram(Resource resource) = 0;
         };
     }
 }

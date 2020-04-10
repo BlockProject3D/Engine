@@ -8,6 +8,6 @@ struct PSInput
 
 float4 main(PSInput input) : SV_TARGET0
 {
-    float4 color = BaseTexture.Sample(BaseTextureSampler, input.TexCoord);
-    return (/*color **/ float4(input.TexCoord, 1, 1));
+    float4 color = BaseTexture.Sample(BaseTextureSampler, input.TexCoord * 12);
+    return (color * float4(input.TexCoord, 1, 1));
 }

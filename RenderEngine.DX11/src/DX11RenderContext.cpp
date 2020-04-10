@@ -33,77 +33,22 @@
 using namespace dx11;
 
 DX11RenderContext::DX11RenderContext(ID3D11Device *dev, ID3D11DeviceContext *devContext, const bp3d::driver::RenderProperties &rprops)
-    : _ra(dev, devContext)
+    : _ra(dev, devContext, rprops)
     , _device(dev)
     , _deviceContext(devContext)
+    , _curPipeline(Null)
     , _curRT(Null)
     , _backDepthBuffer(Null)
     , _backBuffer(Null)
     , _backBufferView(Null)
 {
-    D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-    ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
-    depthStencilDesc.DepthEnable = true;
-    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-    depthStencilDesc.StencilEnable = true;
-    depthStencilDesc.StencilReadMask = 0xFF;
-    depthStencilDesc.StencilWriteMask = 0xFF;
-    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-    depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-    depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-    if (FAILED(_device->CreateDepthStencilState(&depthStencilDesc, &_enableDepth)))
-        throw bpf::RuntimeException("RenderEngine", "CreateDepthStencilState failed");
-    depthStencilDesc.DepthEnable = false;
-    if (FAILED(_device->CreateDepthStencilState(&depthStencilDesc, &_disableDepth)))
-        throw bpf::RuntimeException("RenderEngine", "CreateDepthStencilState failed");
-    for (UINT i = 0; i != 12; ++i)
-        _states[i] = Null;
-    _curCullMode = D3D11_CULL_NONE;
-    _curFillMode = D3D11_FILL_SOLID;
-    _curScissor = FALSE;
-    _baseDesc.FillMode = _curFillMode;
-    _baseDesc.CullMode = _curCullMode;
-    _baseDesc.FrontCounterClockwise = TRUE;
-    _baseDesc.DepthBias = 0;
-    _baseDesc.DepthBiasClamp = 0;
-    _baseDesc.DepthClipEnable = TRUE;
-    _baseDesc.ScissorEnable = _curScissor;
-    _baseDesc.MultisampleEnable = rprops.Multisampling ? TRUE : FALSE;
-    _baseDesc.AntialiasedLineEnable = rprops.Antialiasing ? TRUE : FALSE;
-    UINT state = DX11_RASTERIZER_INDEX(_curCullMode, _curScissor, _curFillMode);
-    if (FAILED(_device->CreateRasterizerState(&_baseDesc, &_states[state])))
-        throw bpf::RuntimeException("RenderEngine", "CreateRasterizerState failed");
-    _deviceContext->RSSetState(_states[state]);
     _deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 DX11RenderContext::~DX11RenderContext()
 {
-    for (UINT i = 0; i != 12; ++i)
-    {
-        if (_states[i] != Null)
-            _states[i]->Release();
-    }
-    _enableDepth->Release();
-    _disableDepth->Release();
     _backBufferView->Release();
     _backBuffer->Release();
-}
-
-void DX11RenderContext::InitCurState()
-{
-    UINT state = DX11_RASTERIZER_INDEX(_curCullMode, _curScissor, _curFillMode);
-    D3D11_RASTERIZER_DESC desc = _baseDesc;
-    desc.CullMode = _curCullMode;
-    desc.FillMode = _curFillMode;
-    desc.ScissorEnable = _curScissor;
-    _device->CreateRasterizerState(&desc, &_states[state]);
 }
 
 void DX11RenderContext::UpdateBackBuffer()
@@ -251,25 +196,46 @@ void DX11RenderContext::UpdateVertexBuffer(bp3d::driver::Resource resource, cons
     _deviceContext->Unmap(var, 0);
 }
 
-void DX11RenderContext::LockVertexFormat(bp3d::driver::Resource resource) noexcept
+void DX11RenderContext::LockPipeline(bp3d::driver::Resource resource) noexcept
 {
-    auto var = reinterpret_cast<ID3D11InputLayout *>(resource);
-    _deviceContext->IASetInputLayout(var);
-}
-
-void DX11RenderContext::LockShaderProgram(bp3d::driver::Resource resource, const int stageFlags) noexcept
-{
-    auto var = reinterpret_cast<ShaderProgram *>(resource);
-    if (stageFlags & bp3d::driver::LOCK_GEOMETRY_STAGE)
-        _deviceContext->GSSetShader(var->Geometry, Null, 0);
-    if (stageFlags & bp3d::driver::LOCK_PIXEL_STAGE)
-        _deviceContext->PSSetShader(var->Pixel, Null, 0);
-    if (stageFlags & bp3d::driver::LOCK_VERTEX_STAGE)
-        _deviceContext->VSSetShader(var->Vertex, Null, 0);
-    if (stageFlags & bp3d::driver::LOCK_HULL_STAGE)
-        _deviceContext->HSSetShader(var->Hull, Null, 0);
-    if (stageFlags & bp3d::driver::LOCK_DOMAIN_STAGE)
-        _deviceContext->DSSetShader(var->Domain, Null, 0);
+    if (resource == _curPipeline)
+        return;
+    Pipeline *pipeline = reinterpret_cast<Pipeline *>(resource);
+    if (_curPipeline == Null)
+    {
+        _deviceContext->RSSetState(pipeline->Rasterizer);
+        _deviceContext->OMSetDepthStencilState(pipeline->DepthState, 0);
+        _deviceContext->IASetInputLayout(pipeline->VFormat);
+        if (pipeline->BlendState != Null)
+            _deviceContext->OMSetBlendState(pipeline->BlendState, *pipeline->BlendFactor, 0);
+        _deviceContext->PSSetShader(pipeline->Program.Pixel, Null, 0);
+        _deviceContext->VSSetShader(pipeline->Program.Vertex, Null, 0);
+        _deviceContext->GSSetShader(pipeline->Program.Geometry, Null, 0);
+        _deviceContext->HSSetShader(pipeline->Program.Hull, Null, 0);
+        _deviceContext->DSSetShader(pipeline->Program.Domain, Null, 0);
+    }
+    else
+    {
+        if (_curPipeline->Rasterizer != pipeline->Rasterizer)
+            _deviceContext->RSSetState(pipeline->Rasterizer);
+        if (_curPipeline->DepthState != pipeline->DepthState)
+            _deviceContext->OMSetDepthStencilState(pipeline->DepthState, 0);
+        if (_curPipeline->VFormat != pipeline->VFormat)
+            _deviceContext->IASetInputLayout(pipeline->VFormat);
+        if (pipeline->BlendState != Null && _curPipeline->BlendState != pipeline->BlendState)
+            _deviceContext->OMSetBlendState(pipeline->BlendState, *pipeline->BlendFactor, 0);
+        if (_curPipeline->Program.Pixel != pipeline->Program.Pixel)
+            _deviceContext->PSSetShader(pipeline->Program.Pixel, Null, 0);
+        if (_curPipeline->Program.Vertex != pipeline->Program.Vertex)
+            _deviceContext->VSSetShader(pipeline->Program.Vertex, Null, 0);
+        if (_curPipeline->Program.Geometry != pipeline->Program.Geometry)
+            _deviceContext->GSSetShader(pipeline->Program.Geometry, Null, 0);
+        if (_curPipeline->Program.Hull != pipeline->Program.Hull)
+            _deviceContext->HSSetShader(pipeline->Program.Hull, Null, 0);
+        if (_curPipeline->Program.Domain != pipeline->Program.Domain)
+            _deviceContext->DSSetShader(pipeline->Program.Domain, Null, 0);
+    }
+    _curPipeline = pipeline;
 }
 
 void DX11RenderContext::Draw(const bpf::uint32 index, const bpf::uint32 count) noexcept
@@ -326,57 +292,6 @@ bool DX11RenderContext::ReadPixels(void *, const bpf::fint, const bpf::fint, con
     return (false);
 }
 
-void DX11RenderContext::SetRenderMode(const bp3d::driver::ERenderMode mode) noexcept
-{
-    switch (mode)
-    {
-    case bp3d::driver::ERenderMode::TRIANGLES:
-        _curFillMode = D3D11_FILL_SOLID;
-        break;
-    case bp3d::driver::ERenderMode::WIREFRAME:
-        _curFillMode = D3D11_FILL_WIREFRAME;
-        break;
-    }
-    UINT state = DX11_RASTERIZER_INDEX(_curCullMode, _curScissor, _curFillMode);
-    if (_states[state] == Null)
-        InitCurState();
-    _deviceContext->RSSetState(_states[state]);
-}
-
-void DX11RenderContext::EnableDepthTest(const bool flag) noexcept
-{
-    if (flag)
-        _deviceContext->OMSetDepthStencilState(_enableDepth, 0);
-    else
-        _deviceContext->OMSetDepthStencilState(_disableDepth, 0);
-}
-
-void DX11RenderContext::SetCullingMode(const bp3d::driver::ECullingMode mode) noexcept
-{
-    switch (mode)
-    {
-    case bp3d::driver::ECullingMode::BACK_FACE:
-        _curCullMode = D3D11_CULL_BACK;
-        break;
-    case bp3d::driver::ECullingMode::FRONT_FACE:
-        _curCullMode = D3D11_CULL_FRONT;
-        break;
-    case bp3d::driver::ECullingMode::DISABLED:
-        _curCullMode = D3D11_CULL_NONE;
-        break;
-    }
-    UINT state = DX11_RASTERIZER_INDEX(_curCullMode, _curScissor, _curFillMode);
-    if (_states[state] == Null)
-        InitCurState();
-    _deviceContext->RSSetState(_states[state]);
-}
-
-void DX11RenderContext::LockBlendState(bp3d::driver::Resource resource, const bpf::math::Vector4f &factor) noexcept
-{
-    auto state = reinterpret_cast<ID3D11BlendState *>(resource);
-    _deviceContext->OMSetBlendState(state, *factor, 0xffffffff);
-}
-
 void DX11RenderContext::SetViewport(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept
 {
     D3D11_VIEWPORT vp;
@@ -389,26 +304,12 @@ void DX11RenderContext::SetViewport(const bpf::fint x, bpf::fint y, bpf::fsize w
     _deviceContext->RSSetViewports(1, &vp);
 }
 
-void DX11RenderContext::EnableScissor(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept
+void DX11RenderContext::SetScissor(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept
 {
-    _curScissor = TRUE;
-    UINT state = DX11_RASTERIZER_INDEX(_curCullMode, _curScissor, _curFillMode);
-    if (_states[state] == Null)
-        InitCurState();
-    _deviceContext->RSSetState(_states[state]);
     D3D11_RECT rect;
     rect.left = x;
     rect.top = y;
     rect.bottom = (LONG)(y + h);
     rect.right = (LONG)(x + w);
     _deviceContext->RSSetScissorRects(1, &rect);
-}
-
-void DX11RenderContext::DisableScissor() noexcept
-{
-    _curScissor = FALSE;
-    UINT state = DX11_RASTERIZER_INDEX(_curCullMode, _curScissor, _curFillMode);
-    if (_states[state] == Null)
-        InitCurState();
-    _deviceContext->RSSetState(_states[state]);
 }

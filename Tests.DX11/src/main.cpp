@@ -44,12 +44,12 @@ bp3d::driver::Resource AttemptBuildShaderProg(const Paths &paths, const memory::
     String vShader;
     String pShader;
     {
-        FileStream stream(paths.AppRoot() + "../test.vertex.hlsl", FILE_MODE_READ);
+        FileStream stream(paths.AppRoot() + "../../Tests.DX11/test.vertex.hlsl", FILE_MODE_READ);
         TextReader reader(stream);
         vShader = reader.ReadAll();
     }
     {
-        FileStream stream(paths.AppRoot() + "../test.pixel.hlsl", FILE_MODE_READ);
+        FileStream stream(paths.AppRoot() + "../../Tests.DX11/test.pixel.hlsl", FILE_MODE_READ);
         TextReader reader(stream);
         pShader = reader.ReadAll();
     }
@@ -78,8 +78,8 @@ bp3d::driver::Resource AttemptBuildShaderProg(const Paths &paths, const memory::
 bp3d::driver::Resource AttemptBuildTexture(bp3d::driver::IResourceAllocator &allocator)
 {
     bpf::uint8 textureData[16] = {
-        0, 0, 0, 255,     /* */ 255, 0, 255, 255,
-        255, 0, 255, 255, /* */ 0, 0, 0, 255
+        0, 0, 0, 1,     /* */ 255, 0, 255, 1,
+        255, 0, 255, 1, /* */ 0, 0, 0, 1
     };
     bp3d::driver::TextureDescriptor desc;
 
@@ -98,12 +98,28 @@ bp3d::driver::Resource AttemptBuildSampler(bp3d::driver::IResourceAllocator &all
 {
     bp3d::driver::SamplerDescriptor desc;
 
-    desc.AddressModeU = bp3d::driver::ETextureAddressing::CLAMP_TO_EDGE;
-    desc.AddressModeV = bp3d::driver::ETextureAddressing::CLAMP_TO_EDGE;
-    desc.AddressModeW = bp3d::driver::ETextureAddressing::CLAMP_TO_EDGE;
+    desc.AddressModeU = bp3d::driver::ETextureAddressing::MIRRORED_REPEAT;
+    desc.AddressModeV = bp3d::driver::ETextureAddressing::MIRRORED_REPEAT;
+    desc.AddressModeW = bp3d::driver::ETextureAddressing::MIRRORED_REPEAT;
     desc.AnisotropicLevel = 0;
     desc.FilterFunc = bp3d::driver::ETextureFiltering::MIN_MAG_POINT_MIPMAP_POINT;
     return (allocator.AllocSampler(desc));
+}
+
+bp3d::driver::Resource AttemptBuildPipeline(bp3d::driver::IResourceAllocator &allocator, bp3d::driver::Resource shaderProg, bp3d::driver::Resource vformat)
+{
+    bp3d::driver::PipelineDescriptor desc;
+    desc.BlendState = Null;
+    desc.DepthEnable = false;
+    desc.DepthWriteEnable = false;
+    desc.CullingMode = bp3d::driver::ECullingMode::BACK_FACE;
+    desc.RenderMode = bp3d::driver::ERenderMode::TRIANGLES;
+    desc.RenderTargetOutputCount = 1;
+    desc.RenderTargetOutputTypes.Add(bp3d::driver::ETextureFormat::RGBA_UINT_8);
+    desc.ScissorEnable = false;
+    desc.ShaderProgram = shaderProg;
+    desc.VertexFormat = vformat;
+    return (allocator.AllocPipeline(desc));
 }
 
 int Main(IApplication &app, const Array<String> &args, const Paths &paths)
@@ -149,8 +165,6 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
         writer << "MaxImageQuality = " << p.MaxImageQuality << newLine;
         writer.Flush();
         bool shouldClose = false;
-        display->GetContext().EnableDepthTest(true);
-        display->GetContext().SetRenderMode(bp3d::driver::ERenderMode::TRIANGLES);
         bp3d::driver::VertexFormatDescriptor desc;
         bp3d::driver::VertexComponent comp;
         comp.Name = "Position";
@@ -174,11 +188,10 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
         bdesc.Size = sizeof(float) * 4 * 6;
         auto vbuf = display->GetContext().GetResourceAllocator().AllocVertexBuffer(bp3d::driver::EBufferType::STATIC, vertex2d, bdesc);
         auto shader = AttemptBuildShaderProg(paths, ptr, display->GetContext().GetResourceAllocator());
+        auto pipeline = AttemptBuildPipeline(display->GetContext().GetResourceAllocator(), shader, vertex2d);
         auto texture = AttemptBuildTexture(display->GetContext().GetResourceAllocator());
         auto sampler = AttemptBuildSampler(display->GetContext().GetResourceAllocator());
         display->GetContext().SetViewport(0, 0, 1920U, 1080U);
-        display->GetContext().LockVertexFormat(vertex2d);
-        display->GetContext().LockShaderProgram(shader, bp3d::driver::LOCK_VERTEX_STAGE | bp3d::driver::LOCK_PIXEL_STAGE);
         display->GetContext().LockVertexBuffer(vbuf, 4 * sizeof(float));
         display->GetContext().LockTexture(texture, 0, bp3d::driver::LOCK_PIXEL_STAGE);
         display->GetContext().LockSampler(sampler, 0, bp3d::driver::LOCK_PIXEL_STAGE);
@@ -189,14 +202,15 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
                 shouldClose = true;
             //Render code here
             display->GetContext().Clear(true, true);
+            display->GetContext().LockPipeline(pipeline);
             display->GetContext().SetRenderTarget(Null);
             display->GetContext().Draw(0, 6);
             //End
             display->Update();
         }
+        display->GetContext().GetResourceAllocator().FreePipeline(pipeline);
         display->GetContext().GetResourceAllocator().FreeSampler(sampler);
         display->GetContext().GetResourceAllocator().FreeTexture2D(texture);
-        display->GetContext().GetResourceAllocator().FreeShaderProgram(shader);
         display->GetContext().GetResourceAllocator().FreeVertexBuffer(vbuf);
         display->GetContext().GetResourceAllocator().FreeVertexFormat(vertex2d);
     }

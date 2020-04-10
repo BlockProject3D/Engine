@@ -41,19 +41,6 @@ namespace bp3d
         constexpr int LOCK_PIXEL_STAGE = 0x10;
         constexpr int LOCK_ALL_STAGE = LOCK_VERTEX_STAGE | LOCK_HULL_STAGE | LOCK_DOMAIN_STAGE | LOCK_GEOMETRY_STAGE | LOCK_PIXEL_STAGE;
 
-        enum class BP3D_API ERenderMode
-        {
-            TRIANGLES,
-            WIREFRAME
-        };
-
-        enum class BP3D_API ECullingMode
-        {
-            BACK_FACE,
-            FRONT_FACE,
-            DISABLED
-        };
-
         class BP3D_API IRenderContext
         {
         public:
@@ -74,21 +61,15 @@ namespace bp3d
             virtual void UpdateIndexBuffer(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
             virtual void LockVertexBuffer(Resource resource, const bpf::uint32 vertexSize) noexcept = 0;
             virtual void UpdateVertexBuffer(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
-            virtual void LockVertexFormat(Resource resource) noexcept = 0;
-            virtual void LockShaderProgram(Resource resource, const int stageFlags = LOCK_ALL_STAGE) noexcept = 0;
-            virtual void LockBlendState(Resource resource, const bpf::math::Vector4f &factor) noexcept = 0;
+            virtual void LockPipeline(Resource resource) noexcept = 0;
             virtual void DrawPatches(const bpf::uint32 index, const bpf::uint32 count, const bpf::uint8 controlPoints) noexcept = 0;
             virtual void Draw(const bpf::uint32 index, const bpf::uint32 count) noexcept = 0;
             virtual void DrawInstanced(const bpf::uint32 index, const bpf::uint32 count, const bpf::uint32 instanceCount) noexcept = 0;
             virtual void DrawIndexed(const bpf::uint32 index, const bpf::uint32 count) noexcept = 0;
             virtual void Clear(const bool colorBuffer = false, const bool depthBuffer = true) noexcept = 0;
             virtual bool ReadPixels(void *output, const bpf::fint x, const bpf::fint y, const bpf::fsize w, const bpf::fsize h) noexcept = 0;
-            virtual void SetRenderMode(const ERenderMode mode) noexcept = 0;
-            virtual void EnableDepthTest(const bool flag) noexcept = 0;
-            virtual void SetCullingMode(const ECullingMode mode) noexcept = 0;
             virtual void SetViewport(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept = 0;
-            virtual void EnableScissor(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept = 0;
-            virtual void DisableScissor() noexcept = 0;
+            virtual void SetScissor(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept = 0;
         };
     }
 }

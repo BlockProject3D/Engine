@@ -27,52 +27,41 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <d3d11.h>
+#include <Framework/Types.hpp>
+#include <Framework/Collection/ArrayList.hpp>
+#include "Engine/Driver/TextureDescriptor.hpp"
+#include "Engine/Driver/Resource.hpp"
 
-namespace dx11
+namespace bp3d
 {
-    struct Texture2D
+    namespace driver
     {
-        ID3D11ShaderResourceView *View;
-        ID3D11Texture2D *Texture;
-        DXGI_FORMAT Format;
-    };
+        enum class BP3D_API ERenderMode
+        {
+            TRIANGLES,
+            WIREFRAME,
+            PATCHES
+        };
 
-    struct RenderTarget
-    {
-        ID3D11RenderTargetView *RTView[8];
-        ID3D11DepthStencilView *DepthView;
-        UINT RTCount;
-    };
+        enum class BP3D_API ECullingMode
+        {
+            BACK_FACE,
+            FRONT_FACE,
+            DISABLED
+        };
 
-    struct DepthBuffer
-    {
-        ID3D11DepthStencilView *View;
-        ID3D11Texture2D *Texture;
-    };
-
-    struct ShaderProgram
-    {
-        ID3D11VertexShader *Vertex;
-        ID3D11GeometryShader *Geometry;
-        ID3D11PixelShader *Pixel;
-        ID3D11HullShader *Hull;
-        ID3D11DomainShader *Domain;
-    };
-
-    struct BlendState
-    {
-        ID3D11BlendState *BlendState;
-        bpf::math::Vector4f Factor;
-    };
-
-    struct Pipeline
-    {
-        ShaderProgram Program;
-        ID3D11RasterizerState *Rasterizer;
-        ID3D11BlendState *BlendState;
-        ID3D11DepthStencilState *DepthState;
-        ID3D11InputLayout *VFormat;
-        bpf::math::Vector4f BlendFactor;
-    };
+        struct BP3D_API PipelineDescriptor
+        {
+            Resource ShaderProgram;
+            Resource BlendState;
+            Resource VertexFormat;
+            bpf::collection::ArrayList<ETextureFormat> RenderTargetOutputTypes;
+            bool DepthEnable;
+            bool DepthWriteEnable;
+            bool ScissorEnable;
+            ERenderMode RenderMode;
+            ECullingMode CullingMode;
+            bpf::uint8 RenderTargetOutputCount;
+        };
+    }
 }

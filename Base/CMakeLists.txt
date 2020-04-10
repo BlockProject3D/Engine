@@ -5,6 +5,7 @@ include("${BP_FRAMEWORK_ROOT}/CMakes/Framework.cmake")
 
 set(SOURCES
     include/Engine/Driver/BufferDescriptor.hpp
+    include/Engine/Driver/PipelineDescriptor.hpp
     include/Engine/Driver/Event.hpp
     include/Engine/Driver/IDisplay.hpp
     include/Engine/Driver/IRenderContext.hpp

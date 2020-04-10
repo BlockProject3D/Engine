@@ -30,8 +30,7 @@
 #include <Engine/Driver/IRenderContext.hpp>
 #include <Engine/Driver/IRenderEngine.hpp>
 #include "DX11ResourceAllocator.hpp"
-
-#define DX11_RASTERIZER_INDEX(cull, scissor, fill) (((UINT)cull - 1) + ((UINT)scissor * 3) + ((UINT)fill - 2) * 6)
+#include "DX11Resources.hpp"
 
 namespace dx11
 {
@@ -41,17 +40,11 @@ namespace dx11
         DX11ResourceAllocator _ra;
         ID3D11Device *_device;
         ID3D11DeviceContext *_deviceContext;
+        Pipeline *_curPipeline;
         bp3d::driver::Resource _curRT;
         bp3d::driver::Resource _backDepthBuffer;
         ID3D11Texture2D *_backBuffer;
         ID3D11RenderTargetView *_backBufferView;
-        ID3D11DepthStencilState *_enableDepth;
-        ID3D11DepthStencilState *_disableDepth;
-        ID3D11RasterizerState *_states[12]; //Formula: cullmodeState + (scissorState * 3) + (fillState * 6)
-        D3D11_CULL_MODE _curCullMode;
-        D3D11_FILL_MODE _curFillMode;
-        BOOL _curScissor;
-        D3D11_RASTERIZER_DESC _baseDesc;
 
         void UpdateBackBuffer();
         void InitCurState();
@@ -86,20 +79,14 @@ namespace dx11
         void UpdateIndexBuffer(bp3d::driver::Resource resource, const void *data, const bpf::fsize size) noexcept;
         void LockVertexBuffer(bp3d::driver::Resource resource, const bpf::uint32 vertexSize) noexcept;
         void UpdateVertexBuffer(bp3d::driver::Resource resource, const void *data, const bpf::fsize size) noexcept;
-        void LockVertexFormat(bp3d::driver::Resource resource) noexcept;
-        void LockShaderProgram(bp3d::driver::Resource resource, const int stageFlags) noexcept;
-        void LockBlendState(bp3d::driver::Resource resource, const bpf::math::Vector4f &factor) noexcept;
+        void LockPipeline(bp3d::driver::Resource resource) noexcept;
         void DrawPatches(const bpf::uint32 index, const bpf::uint32 count, const bpf::uint8 controlPoints) noexcept;
         void Draw(const bpf::uint32 index, const bpf::uint32 count) noexcept;
         void DrawInstanced(const bpf::uint32 index, const bpf::uint32 count, const bpf::uint32 instanceCount) noexcept;
         void DrawIndexed(const bpf::uint32 index, const bpf::uint32 count) noexcept;
         void Clear(const bool colorBuffer = false, const bool depthBuffer = true) noexcept;
         bool ReadPixels(void *output, const bpf::fint x, const bpf::fint y, const bpf::fsize w, const bpf::fsize h) noexcept;
-        void SetRenderMode(const bp3d::driver::ERenderMode mode) noexcept; //D3D11_RASTERIZER_DESC
-        void EnableDepthTest(const bool flag) noexcept; //D3D11_DEPTH_STENCIL_DESC
-        void SetCullingMode(const bp3d::driver::ECullingMode mode) noexcept; //D3D11_RASTERIZER_DESC
         void SetViewport(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept;
-        void EnableScissor(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept;
-        void DisableScissor() noexcept;
+        void SetScissor(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept;
     };
 }

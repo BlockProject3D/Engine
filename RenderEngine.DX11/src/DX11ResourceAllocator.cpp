@@ -121,6 +121,104 @@ void DX11ResourceAllocator::SetupTextureFormat(const bp3d::driver::TextureDescri
     }
 }
 
+DX11ResourceAllocator::DX11ResourceAllocator(ID3D11Device *dev, ID3D11DeviceContext *devContext, const bp3d::driver::RenderProperties &rprops)
+    : _device(dev)
+    , _deviceContext(devContext)
+{
+    for (UINT i = 0; i != 12; ++i)
+        _states[i] = Null;
+    for (UINT i = 0; i != 4; ++i)
+        _depthStates[i] = Null;
+    _baseDesc.FillMode = D3D11_FILL_SOLID;
+    _baseDesc.CullMode = D3D11_CULL_NONE;
+    _baseDesc.FrontCounterClockwise = TRUE;
+    _baseDesc.DepthBias = 0;
+    _baseDesc.DepthBiasClamp = 0;
+    _baseDesc.DepthClipEnable = TRUE;
+    _baseDesc.ScissorEnable = FALSE;
+    _baseDesc.MultisampleEnable = rprops.Multisampling ? TRUE : FALSE;
+    _baseDesc.AntialiasedLineEnable = rprops.Antialiasing ? TRUE : FALSE;
+}
+
+DX11ResourceAllocator::~DX11ResourceAllocator()
+{
+    for (UINT i = 0; i != 12; ++i)
+    {
+        if (_states[i] != Null)
+            _states[i]->Release();
+    }
+    for (UINT i = 0; i != 4; ++i)
+    {
+        if (_depthStates[i] != Null)
+            _depthStates[i]->Release();
+    }
+}
+
+ID3D11RasterizerState *DX11ResourceAllocator::GetRasterizerState(const bp3d::driver::PipelineDescriptor &descriptor)
+{
+    D3D11_CULL_MODE cullMode = D3D11_CULL_NONE;
+    D3D11_FILL_MODE fillMode = D3D11_FILL_SOLID;
+    switch (descriptor.CullingMode)
+    {
+    case bp3d::driver::ECullingMode::BACK_FACE:
+        cullMode = D3D11_CULL_BACK;
+        break;
+    case bp3d::driver::ECullingMode::FRONT_FACE:
+        cullMode = D3D11_CULL_FRONT;
+        break;
+    case bp3d::driver::ECullingMode::DISABLED:
+        cullMode = D3D11_CULL_NONE;
+        break;
+    }
+    switch (descriptor.RenderMode)
+    {
+    case bp3d::driver::ERenderMode::TRIANGLES:
+        fillMode = D3D11_FILL_SOLID;
+        break;
+    case bp3d::driver::ERenderMode::WIREFRAME:
+        fillMode = D3D11_FILL_WIREFRAME;
+        break;
+    }
+    UINT state = DX11_RASTERIZER_INDEX(cullMode, descriptor.ScissorEnable ? TRUE : FALSE, fillMode);
+    if (_states[state] == Null)
+    {
+        D3D11_RASTERIZER_DESC desc = _baseDesc;
+        desc.CullMode = cullMode;
+        desc.FillMode = fillMode;
+        desc.ScissorEnable = descriptor.ScissorEnable ? TRUE : FALSE;
+        if (FAILED(_device->CreateRasterizerState(&desc, &_states[state])))
+            throw bpf::RuntimeException("RenderEngine", "CreateRasterizerState failed");
+    }
+    return (_states[state]);
+}
+
+ID3D11DepthStencilState *DX11ResourceAllocator::GetDepthState(const bp3d::driver::PipelineDescriptor &descriptor)
+{
+    UINT state = DX11_DEPTHSTATE_INDEX(descriptor.DepthEnable, descriptor.DepthWriteEnable);
+    if (_depthStates[state] == Null)
+    {
+        D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+        ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
+        depthStencilDesc.DepthEnable = descriptor.DepthEnable;
+        depthStencilDesc.DepthWriteMask = descriptor.DepthWriteEnable ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
+        depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+        depthStencilDesc.StencilEnable = false;
+        depthStencilDesc.StencilReadMask = 0xFF;
+        depthStencilDesc.StencilWriteMask = 0xFF;
+        depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+        depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+        depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+        depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+        depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+        depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+        depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+        depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+        if (FAILED(_device->CreateDepthStencilState(&depthStencilDesc, &_depthStates[state])))
+            throw bpf::RuntimeException("RenderEngine", "CreateDepthStencilState failed");
+    }
+    return (_depthStates[state]);
+}
+
 bp3d::driver::Resource DX11ResourceAllocator::AllocTexture2D(const bp3d::driver::EBufferType type, const bp3d::driver::TextureDescriptor &descriptor)
 {
     D3D11_SUBRESOURCE_DATA data;
@@ -787,13 +885,54 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocBlendState(const bp3d::driver
     }
     if (FAILED(_device->CreateBlendState(&desc, &state)))
         throw bpf::RuntimeException("RenderEngine", "CreateBlendState failed");
+    BlendState *blend = static_cast<BlendState *>(bpf::memory::Memory::Malloc(sizeof(BlendState)));
+    blend->BlendState = state;
+    blend->Factor = descriptor.Factor;
     return (state);
 }
 
-void DX11ResourceAllocator::FreeBlendState(bp3d::driver::Resource resource)
+bp3d::driver::Resource DX11ResourceAllocator::AllocPipeline(const bp3d::driver::PipelineDescriptor &descriptor)
 {
-    ID3D11BlendState *state = reinterpret_cast<ID3D11BlendState *>(resource);
-    state->Release();
+    ID3D11DepthStencilState *depthState = GetDepthState(descriptor);
+    ID3D11RasterizerState *rasterizer = GetRasterizerState(descriptor);
+    Pipeline *pipeline = static_cast<Pipeline *>(bpf::memory::Memory::Malloc(sizeof(Pipeline)));
+    ShaderProgram *prog = reinterpret_cast<ShaderProgram *>(descriptor.ShaderProgram);
+    pipeline->Program = *prog;
+    bpf::memory::Memory::Free(prog);
+    BlendState *bstate = reinterpret_cast<BlendState *>(descriptor.BlendState);
+    if (bstate != Null)
+    {
+        pipeline->BlendState = bstate->BlendState;
+        pipeline->BlendFactor = bstate->Factor;
+    }
+    else
+    {
+        pipeline->BlendState = Null;
+        pipeline->BlendFactor = bpf::math::Vector4f::Zero;
+    }
+    bpf::memory::Memory::Free(bstate);
+    pipeline->Rasterizer = rasterizer;
+    pipeline->DepthState = depthState;
+    pipeline->VFormat = reinterpret_cast<ID3D11InputLayout *>(descriptor.VertexFormat);
+    return (pipeline);
+}
+
+void DX11ResourceAllocator::FreePipeline(bp3d::driver::Resource resource)
+{
+    Pipeline *pipeline = reinterpret_cast<Pipeline *>(resource);
+    if (pipeline->BlendState != Null)
+        pipeline->BlendState->Release();
+    if (pipeline->Program.Domain != Null)
+        pipeline->Program.Domain->Release();
+    if (pipeline->Program.Hull != Null)
+        pipeline->Program.Hull->Release();
+    if (pipeline->Program.Geometry != Null)
+        pipeline->Program.Geometry->Release();
+    if (pipeline->Program.Vertex != Null)
+        pipeline->Program.Vertex->Release();
+    if (pipeline->Program.Pixel != Null)
+        pipeline->Program.Pixel->Release();
+    bpf::memory::Memory::Free(pipeline);
 }
 
 void DX11ResourceAllocator::FreeVertexFormat(bp3d::driver::Resource resource)
@@ -870,16 +1009,4 @@ void DX11ResourceAllocator::FreeIndexBuffer(bp3d::driver::Resource resource)
 {
     ID3D11Buffer *buf = reinterpret_cast<ID3D11Buffer *>(resource);
     buf->Release();
-}
-
-void DX11ResourceAllocator::FreeShaderProgram(bp3d::driver::Resource resource)
-{
-    ShaderProgram *prog = reinterpret_cast<ShaderProgram *>(resource);
-    if (prog->Geometry != Null)
-        prog->Geometry->Release();
-    if (prog->Pixel != Null)
-        prog->Pixel->Release();
-    if (prog->Vertex != Null)
-        prog->Vertex->Release();
-    bpf::memory::Memory::Free(prog);
 }
