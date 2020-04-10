@@ -85,6 +85,18 @@ namespace gl40
         GLenum AlphaOp;
         GLenum ColorOp;
         bool Enable;
+        bpf::math::Vector4f Factor;
+    };
+
+    struct Pipeline
+    {
+        GLuint Program;
+        BlendState BlendState;
+        bool DepthEnable;
+        bool DepthWriteEnable;
+        bool ScissorEnable;
+        GLenum RenderMode;
+        GLenum CullingMode;
     };
 
 #ifdef X86

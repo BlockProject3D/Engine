@@ -527,20 +527,125 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocShaderProgram(const bp3d::dri
     return (res.Data);
 }
 
+GLenum GL40ResourceAllocator::TranslateBlendOp(const bp3d::driver::EBlendOp op)
+{
+    switch (op)
+    {
+    case bp3d::driver::EBlendOp::ADD:
+        return (GL_FUNC_ADD);
+    case bp3d::driver::EBlendOp::SUBTRACT:
+        return (GL_FUNC_SUBTRACT);
+    case bp3d::driver::EBlendOp::INVERSE_SUBTRACT:
+        return (GL_FUNC_REVERSE_SUBTRACT);
+    case bp3d::driver::EBlendOp::MIN:
+        return (GL_MIN);
+    case bp3d::driver::EBlendOp::MAX:
+        return (GL_MAX);
+    }
+    return (GL_FUNC_ADD);
+}
+
+GLenum GL40ResourceAllocator::TranslateBlendFactor(const bp3d::driver::EBlendFactor factor)
+{
+    switch (factor)
+    {
+    case bp3d::driver::EBlendFactor::ZERO:
+        return (GL_ZERO);
+    case bp3d::driver::EBlendFactor::ONE:
+        return (GL_ONE);
+    case bp3d::driver::EBlendFactor::DST_ALPHA:
+        return (GL_DST_ALPHA);
+    case bp3d::driver::EBlendFactor::DST_COLOR:
+        return (GL_DST_COLOR);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_DST_ALPHA:
+        return (GL_ONE_MINUS_DST_ALPHA);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_DST_COLOR:
+        return (GL_ONE_MINUS_DST_COLOR);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_SRC_ALPHA:
+        return (GL_ONE_MINUS_SRC_ALPHA);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_SRC_COLOR:
+        return (GL_ONE_MINUS_SRC_COLOR);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_SRC1_ALPHA:
+        return (GL_ONE_MINUS_SRC1_ALPHA);
+    case bp3d::driver::EBlendFactor::ONE_MINUS_SRC1_COLOR:
+        return (GL_ONE_MINUS_SRC1_COLOR);
+    case bp3d::driver::EBlendFactor::SRC1_COLOR:
+        return (GL_SRC1_COLOR);
+    case bp3d::driver::EBlendFactor::SRC_ALPHA_SATURATE:
+        return (GL_SRC_ALPHA_SATURATE);
+    case bp3d::driver::EBlendFactor::SRC1_ALPHA:
+        return (GL_SRC1_ALPHA);
+    case bp3d::driver::EBlendFactor::SRC_COLOR:
+        return (GL_SRC_COLOR);
+    case bp3d::driver::EBlendFactor::SRC_ALPHA:
+        return (GL_SRC_ALPHA);
+    }
+    return (GL_ZERO);
+}
+
 bp3d::driver::Resource GL40ResourceAllocator::AllocBlendState(const bp3d::driver::BlendStateDescriptor &descriptor)
 {
     if (descriptor.Components.Size() == 0)
         throw bpf::RuntimeException("RenderEngine", "Can't allocate a Null blend state");
-    auto com = descriptor.Components[0];
+    auto target = descriptor.Components[0];
     BlendState *state = static_cast<BlendState *>(bpf::memory::Memory::Malloc(sizeof(BlendState)));
-    state->Enable = com.Enable;
-    //TODO: Finish
+    state->Enable = target.Enable;
+    state->ColorOp = TranslateBlendOp(target.ColorOp);
+    state->AlphaOp = TranslateBlendOp(target.AlphaOp);
+    state->SrcColor = TranslateBlendFactor(target.SrcColor);
+    state->DstColor = TranslateBlendFactor(target.DstColor);
+    state->SrcAlpha = TranslateBlendFactor(target.SrcAlpha);
+    state->DstAlpha = TranslateBlendFactor(target.DstAlpha);
+    state->Factor = descriptor.Factor;
     return (state);
 }
 
-void GL40ResourceAllocator::FreeBlendState(bp3d::driver::Resource resource)
+bp3d::driver::Resource GL40ResourceAllocator::AllocPipeline(const bp3d::driver::PipelineDescriptor &descriptor)
 {
-    bpf::memory::Memory::Free(resource);
+    Pipeline *pipeline = static_cast<Pipeline *>(bpf::memory::Memory::Malloc(sizeof(Pipeline)));
+    BlendState *state = reinterpret_cast<BlendState *>(descriptor.BlendState);
+    ObjectResource prog;
+    prog.Data = descriptor.ShaderProgram;
+#ifdef X86_64
+    GLuint prg = prog.Ptrs[0];
+#else
+    GLuint prg = prog.Ptr;
+#endif
+    pipeline->BlendState = *state;
+    pipeline->Program = prg;
+    bpf::memory::Memory::Free(state);
+    pipeline->DepthWriteEnable = descriptor.DepthWriteEnable;
+    pipeline->DepthEnable = descriptor.DepthEnable;
+    switch (descriptor.CullingMode)
+    {
+    case bp3d::driver::ECullingMode::BACK_FACE:
+        pipeline->CullingMode = GL_BACK;
+        break;
+    case bp3d::driver::ECullingMode::FRONT_FACE:
+        pipeline->CullingMode = GL_FRONT;
+        break;
+    case bp3d::driver::ECullingMode::DISABLED:
+        pipeline->CullingMode = GL_CULL_FACE;
+        break;
+    }
+    switch (descriptor.RenderMode)
+    {
+    case bp3d::driver::ERenderMode::TRIANGLES:
+        pipeline->RenderMode = GL_FILL;
+        break;
+    case bp3d::driver::ERenderMode::WIREFRAME:
+        pipeline->RenderMode = GL_LINE;
+        break;
+    }
+    pipeline->ScissorEnable = descriptor.ScissorEnable;
+    return (pipeline);
+}
+
+void GL40ResourceAllocator::FreePipeline(bp3d::driver::Resource resource)
+{
+    Pipeline *pipeline = reinterpret_cast<Pipeline *>(resource);
+    glDeleteProgram(pipeline->Program);
+    bpf::memory::Memory::Free(pipeline);
 }
 
 void GL40ResourceAllocator::FreeDepthBuffer(bp3d::driver::Resource resource)
@@ -668,18 +773,6 @@ void GL40ResourceAllocator::FreeIndexBuffer(bp3d::driver::Resource resource)
     GLuint ibo = res.Ptr;
 #endif
     glDeleteBuffers(1, &ibo);
-}
-
-void GL40ResourceAllocator::FreeShaderProgram(bp3d::driver::Resource resource)
-{
-    ObjectResource res;
-    res.Data = resource;
-#ifdef X86_64
-    GLuint prog = res.Ptrs[0];
-#else
-    GLuint prog = res.Ptr;
-#endif
-    glDeleteProgram(prog);
 }
 
 void GL40ResourceAllocator::FreeVertexFormat(bp3d::driver::Resource resource)

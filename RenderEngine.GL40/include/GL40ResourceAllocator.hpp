@@ -36,9 +36,10 @@ namespace gl40
     {
     private:
         void SetupTextureFormat(const bp3d::driver::TextureDescriptor &descriptor, GLenum &internalFormat, GLenum &format, GLenum &t, GLsizei &slicemempitch);
+        GLenum TranslateBlendOp(const bp3d::driver::EBlendOp op);
+        GLenum TranslateBlendFactor(const bp3d::driver::EBlendFactor factor);
 
     public:
-        ~GL40ResourceAllocator();
         bp3d::driver::Resource AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height, const bp3d::driver::EDepthBufferFormat format);
         bp3d::driver::Resource AllocTexture2D(const bp3d::driver::EBufferType type, const bp3d::driver::TextureDescriptor &descriptor);
         bp3d::driver::Resource AllocTexture2DArray(const bp3d::driver::EBufferType type, const bp3d::driver::TextureDescriptor &descriptor, const bpf::fsize layers);
@@ -52,8 +53,9 @@ namespace gl40
         bp3d::driver::Resource AllocIndexBuffer(const bp3d::driver::EBufferType type, const bp3d::driver::BufferDescriptor &descriptor);
         bp3d::driver::Resource AllocShaderProgram(const bp3d::driver::ShaderProgramDescriptor &descriptor);
         bp3d::driver::Resource AllocBlendState(const bp3d::driver::BlendStateDescriptor &descriptor);
-        void FreeBlendState(bp3d::driver::Resource resource);
+        bp3d::driver::Resource AllocPipeline(const bp3d::driver::PipelineDescriptor &descriptor);
         void FreeVertexFormat(bp3d::driver::Resource resource);
+        void FreePipeline(bp3d::driver::Resource resource);
         void FreeDepthBuffer(bp3d::driver::Resource resource);
         void FreeTexture2D(bp3d::driver::Resource resource);
         void FreeTexture2DArray(bp3d::driver::Resource resource);
@@ -64,6 +66,5 @@ namespace gl40
         void FreeConstantBuffer(bp3d::driver::Resource resource);
         void FreeVertexBuffer(bp3d::driver::Resource resource);
         void FreeIndexBuffer(bp3d::driver::Resource resource);
-        void FreeShaderProgram(bp3d::driver::Resource resource);
     };
 }
