@@ -72,6 +72,13 @@ bp3d::driver::Resource AttemptBuildShaderProg(const Paths &paths, const memory::
     desc.Size = pShaderCode.Size();
     desc.Type = bp3d::driver::EShaderType::PIXEL;
     prog.Shaders.Add(desc);
+    bp3d::driver::ShaderBindingDescriptor bind;
+    bind.Register = 0;
+    bind.StageFlags = bp3d::driver::LOCK_PIXEL_STAGE;
+    bind.Type = bp3d::driver::EBindingType::TEXTURE;
+    prog.Bindings.Add(bind);
+    bind.Type = bp3d::driver::EBindingType::SAMPLER;
+    prog.Bindings.Add(bind);
     return (allocator.AllocShaderProgram(prog));
 }
 
@@ -193,8 +200,6 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
         auto sampler = AttemptBuildSampler(display->GetContext().GetResourceAllocator());
         display->GetContext().SetViewport(0, 0, 1920U, 1080U);
         display->GetContext().LockVertexBuffer(vbuf, 4 * sizeof(float));
-        display->GetContext().LockTexture(texture, 0, bp3d::driver::LOCK_PIXEL_STAGE);
-        display->GetContext().LockSampler(sampler, 0, bp3d::driver::LOCK_PIXEL_STAGE);
         while (!shouldClose)
         {
             bp3d::driver::Event ev;
@@ -203,11 +208,14 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
             //Render code here
             display->GetContext().Clear(true, true);
             display->GetContext().LockPipeline(pipeline);
+            display->GetContext().LockTexture(texture, 0);
+            display->GetContext().LockSampler(sampler, 0);
             display->GetContext().SetRenderTarget(Null);
             display->GetContext().Draw(0, 6);
             //End
             display->Update();
         }
+        display->GetContext().GetResourceAllocator().FreeShaderProgram(shader);
         display->GetContext().GetResourceAllocator().FreePipeline(pipeline);
         display->GetContext().GetResourceAllocator().FreeSampler(sampler);
         display->GetContext().GetResourceAllocator().FreeTexture2D(texture);
