@@ -37,17 +37,16 @@ namespace dx11
     class DX11RenderContext final : public bp3d::driver::IRenderContext
     {
     private:
-        DX11ResourceAllocator _ra;
-        ID3D11Device *_device;
         ID3D11DeviceContext *_deviceContext;
         Pipeline *_curPipeline;
         bp3d::driver::Resource _curRT;
+        ID3D11RenderTargetView *_backBufferView;
         bp3d::driver::Resource _backDepthBuffer;
         ID3D11Texture2D *_backBuffer;
-        ID3D11RenderTargetView *_backBufferView;
+        DX11ResourceAllocator _ra;
+        ID3D11Device *_device;
 
         void UpdateBackBuffer();
-        void InitCurState();
     public:
         DX11RenderContext(ID3D11Device *dev, ID3D11DeviceContext *devContext, const bp3d::driver::RenderProperties &rprops);
         ~DX11RenderContext();
@@ -68,11 +67,11 @@ namespace dx11
                 UpdateBackBuffer();
         }
 
-        void LockConstantBuffer(bp3d::driver::Resource resource, const bpf::fint reg, const int stageFlags) noexcept;
+        void LockConstantBuffer(bp3d::driver::Resource resource, const bpf::fint reg) noexcept;
         void UpdateConstantBuffer(bp3d::driver::Resource resource, const void *data, const bpf::fsize size) noexcept;
-        void LockTexture(bp3d::driver::Resource resource, const bpf::fint reg, const int stageFlags) noexcept;
+        void LockTexture(bp3d::driver::Resource resource, const bpf::fint reg) noexcept;
         void UpdateTexture(bp3d::driver::Resource resource, const void *data, const bpf::fsize size) noexcept;
-        void LockSampler(bp3d::driver::Resource resource, const bpf::fint reg, const int stageFlags) noexcept;
+        void LockSampler(bp3d::driver::Resource resource, const bpf::fint reg) noexcept;
         void SetRenderTarget(bp3d::driver::Resource resource) noexcept;
         bp3d::driver::Resource GetRenderTarget() noexcept;
         void LockIndexBuffer(bp3d::driver::Resource resource) noexcept;

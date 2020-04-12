@@ -33,14 +33,14 @@
 using namespace dx11;
 
 DX11RenderContext::DX11RenderContext(ID3D11Device *dev, ID3D11DeviceContext *devContext, const bp3d::driver::RenderProperties &rprops)
-    : _ra(dev, devContext, rprops)
-    , _device(dev)
-    , _deviceContext(devContext)
+    : _deviceContext(devContext)
     , _curPipeline(Null)
     , _curRT(Null)
+    , _backBufferView(Null)
     , _backDepthBuffer(Null)
     , _backBuffer(Null)
-    , _backBufferView(Null)
+    , _ra(dev, devContext, rprops)
+    , _device(dev)
 {
     _deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
@@ -102,8 +102,9 @@ bp3d::driver::Resource DX11RenderContext::GetRenderTarget() noexcept
     return (_curRT);
 }
 
-void DX11RenderContext::LockConstantBuffer(bp3d::driver::Resource resource, const bpf::fint reg, const int stageFlags) noexcept
+void DX11RenderContext::LockConstantBuffer(bp3d::driver::Resource resource, const bpf::fint reg) noexcept
 {
+    int stageFlags = _curPipeline == Null ? 0 : _curPipeline->Program.StageFlagsCBuffers[reg];
     auto var = reinterpret_cast<ID3D11Buffer *>(resource);
     if (stageFlags & bp3d::driver::LOCK_GEOMETRY_STAGE)
         _deviceContext->GSSetConstantBuffers(reg, 1, &var);
@@ -126,8 +127,9 @@ void DX11RenderContext::UpdateConstantBuffer(bp3d::driver::Resource resource, co
     _deviceContext->Unmap(var, 0);
 }
 
-void DX11RenderContext::LockTexture(bp3d::driver::Resource resource, const bpf::fint reg, const int stageFlags) noexcept
+void DX11RenderContext::LockTexture(bp3d::driver::Resource resource, const bpf::fint reg) noexcept
 {
+    int stageFlags = _curPipeline == Null ? 0 : _curPipeline->Program.StageFlagsTextures[reg];
     auto var = reinterpret_cast<Texture2D *>(resource);
     if (stageFlags & bp3d::driver::LOCK_GEOMETRY_STAGE)
         _deviceContext->GSSetShaderResources(reg, 1, &var->View);
@@ -150,8 +152,9 @@ void DX11RenderContext::UpdateTexture(bp3d::driver::Resource resource, const voi
     _deviceContext->Unmap(var->Texture, 0);
 }
 
-void DX11RenderContext::LockSampler(bp3d::driver::Resource resource, const bpf::fint reg, const int stageFlags) noexcept
+void DX11RenderContext::LockSampler(bp3d::driver::Resource resource, const bpf::fint reg) noexcept
 {
+    int stageFlags = _curPipeline == Null ? 0 : _curPipeline->Program.StageFlagsSamplers[reg];
     auto var = reinterpret_cast<ID3D11SamplerState *>(resource);
     if (stageFlags & bp3d::driver::LOCK_GEOMETRY_STAGE)
         _deviceContext->GSSetSamplers(reg, 1, &var);
@@ -200,6 +203,11 @@ void DX11RenderContext::LockPipeline(bp3d::driver::Resource resource) noexcept
 {
     if (resource == _curPipeline)
         return;
+    if (resource == Null)
+    {
+        _curPipeline = Null;
+        return;
+    }
     Pipeline *pipeline = reinterpret_cast<Pipeline *>(resource);
     if (_curPipeline == Null)
     {

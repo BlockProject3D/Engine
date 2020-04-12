@@ -606,6 +606,7 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocRenderTarget(const bp3d::driv
     {
         DepthBuffer *buf = reinterpret_cast<DepthBuffer *>(descriptor.DepthBuffer);
         rt->DepthView = buf->View;
+        rt->DepthView->AddRef();
     }
     return (rt);
 }
@@ -802,6 +803,34 @@ errorCleanup:
 
 linkProg:
     ShaderProgram *prog = static_cast<ShaderProgram *>(bpf::memory::Memory::Malloc(sizeof(ShaderProgram)));
+    for (int i = 0; i != 16; ++i)
+    {
+        prog->StageFlagsCBuffers[i] = 0;
+        prog->StageFlagsTextures[i] = 0;
+        prog->StageFlagsSamplers[i] = 0;
+    }
+    for (auto &bind : descriptor.Bindings)
+    {
+        switch (bind.Type)
+        {
+        case bp3d::driver::EBindingType::CONSTANT_BUFFER:
+            prog->StageFlagsCBuffers[bind.Register] = bind.StageFlags;
+            break;
+        case bp3d::driver::EBindingType::SAMPLER:
+            prog->StageFlagsSamplers[bind.Register] = bind.StageFlags;
+            break;
+        case bp3d::driver::EBindingType::TEXTURE:
+            prog->StageFlagsTextures[bind.Register] = bind.StageFlags;
+            break;
+        case bp3d::driver::EBindingType::FIXED_CONSTANT_BUFFER:
+            _deviceContext->PSSetConstantBuffers(bind.Register, 1, &_fixedConstBufs[bind.Register]);
+            _deviceContext->VSSetConstantBuffers(bind.Register, 1, &_fixedConstBufs[bind.Register]);
+            _deviceContext->HSSetConstantBuffers(bind.Register, 1, &_fixedConstBufs[bind.Register]);
+            _deviceContext->DSSetConstantBuffers(bind.Register, 1, &_fixedConstBufs[bind.Register]);
+            _deviceContext->GSSetConstantBuffers(bind.Register, 1, &_fixedConstBufs[bind.Register]);
+            break;
+        }
+    }
     prog->Geometry = geometry;
     prog->Pixel = pixel;
     prog->Vertex = vertex;
@@ -898,23 +927,52 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocPipeline(const bp3d::driver::
     Pipeline *pipeline = static_cast<Pipeline *>(bpf::memory::Memory::Malloc(sizeof(Pipeline)));
     ShaderProgram *prog = reinterpret_cast<ShaderProgram *>(descriptor.ShaderProgram);
     pipeline->Program = *prog;
-    bpf::memory::Memory::Free(prog);
+    if (pipeline->Program.Domain != Null)
+        pipeline->Program.Domain->AddRef();
+    if (pipeline->Program.Hull != Null)
+        pipeline->Program.Hull->AddRef();
+    if (pipeline->Program.Vertex != Null)
+        pipeline->Program.Vertex->AddRef();
+    if (pipeline->Program.Pixel != Null)
+        pipeline->Program.Pixel->AddRef();
+    if (pipeline->Program.Geometry != Null)
+        pipeline->Program.Geometry->AddRef();
     BlendState *bstate = reinterpret_cast<BlendState *>(descriptor.BlendState);
     if (bstate != Null)
     {
         pipeline->BlendState = bstate->BlendState;
         pipeline->BlendFactor = bstate->Factor;
+        pipeline->BlendState->AddRef();
     }
     else
     {
         pipeline->BlendState = Null;
         pipeline->BlendFactor = bpf::math::Vector4f::Zero;
     }
-    bpf::memory::Memory::Free(bstate);
     pipeline->Rasterizer = rasterizer;
     pipeline->DepthState = depthState;
     pipeline->VFormat = reinterpret_cast<ID3D11InputLayout *>(descriptor.VertexFormat);
+    pipeline->VFormat->AddRef();
     return (pipeline);
+}
+
+bp3d::driver::Resource DX11ResourceAllocator::AllocFixedConstantBuffer(const bp3d::driver::EBufferType type, const int reg, const bp3d::driver::BufferDescriptor &descriptor)
+{
+    ID3D11Buffer *buffer = reinterpret_cast<ID3D11Buffer *>(AllocConstantBuffer(type, descriptor));
+    FixedConstantBuffer *buf = static_cast<FixedConstantBuffer *>(bpf::memory::Memory::Malloc(sizeof(FixedConstantBuffer)));
+    buf->Register = reg;
+    if ((reg + 1) > _fixedConstBufs.Size())
+        _fixedConstBufs.Resize(reg + 1);
+    _fixedConstBufs[reg] = buffer;
+    return (buf);
+}
+
+void DX11ResourceAllocator::FreeFixedConstantBuffer(bp3d::driver::Resource resource)
+{
+    FixedConstantBuffer *buf = reinterpret_cast<FixedConstantBuffer *>(resource);
+    buf->Buffer->Release();
+    _fixedConstBufs[buf->Register] = Null;
+    bpf::memory::Memory::Free(buf);
 }
 
 void DX11ResourceAllocator::FreePipeline(bp3d::driver::Resource resource)
@@ -932,7 +990,31 @@ void DX11ResourceAllocator::FreePipeline(bp3d::driver::Resource resource)
         pipeline->Program.Vertex->Release();
     if (pipeline->Program.Pixel != Null)
         pipeline->Program.Pixel->Release();
+    pipeline->VFormat->Release();
     bpf::memory::Memory::Free(pipeline);
+}
+
+void DX11ResourceAllocator::FreeShaderProgram(bp3d::driver::Resource resource)
+{
+    ShaderProgram *prog = reinterpret_cast<ShaderProgram *>(resource);
+    if (prog->Domain != Null)
+        prog->Domain->Release();
+    if (prog->Hull != Null)
+        prog->Hull->Release();
+    if (prog->Vertex != Null)
+        prog->Vertex->Release();
+    if (prog->Pixel != Null)
+        prog->Pixel->Release();
+    if (prog->Geometry != Null)
+        prog->Geometry->Release();
+    bpf::memory::Memory::Free(prog);
+}
+
+void DX11ResourceAllocator::FreeBlendState(bp3d::driver::Resource resource)
+{
+    BlendState *state = reinterpret_cast<BlendState *>(resource);
+    state->BlendState->Release();
+    bpf::memory::Memory::Free(state);
 }
 
 void DX11ResourceAllocator::FreeVertexFormat(bp3d::driver::Resource resource)
@@ -990,6 +1072,8 @@ void DX11ResourceAllocator::FreeRenderTarget(bp3d::driver::Resource resource)
     RenderTarget *rt = reinterpret_cast<RenderTarget *>(resource);
     for (bpf::fsize i = 0; i != rt->RTCount; ++i)
         rt->RTView[i]->Release();
+    if (rt->DepthView != Null)
+        rt->DepthView->Release();
     bpf::memory::Memory::Free(rt);
 }
 

@@ -34,13 +34,6 @@ namespace bp3d
 {
     namespace driver
     {
-        constexpr int LOCK_VERTEX_STAGE = 0x1;
-        constexpr int LOCK_HULL_STAGE = 0x2;
-        constexpr int LOCK_DOMAIN_STAGE = 0x4;
-        constexpr int LOCK_GEOMETRY_STAGE = 0x8;
-        constexpr int LOCK_PIXEL_STAGE = 0x10;
-        constexpr int LOCK_ALL_STAGE = LOCK_VERTEX_STAGE | LOCK_HULL_STAGE | LOCK_DOMAIN_STAGE | LOCK_GEOMETRY_STAGE | LOCK_PIXEL_STAGE;
-
         class BP3D_API IRenderContext
         {
         public:
@@ -50,11 +43,11 @@ namespace bp3d
             /**
              * Note: the stage argument is only usefull for DirectX applications
              */
-            virtual void LockConstantBuffer(Resource resource, const bpf::fint reg, const int stageFlags = LOCK_ALL_STAGE) noexcept = 0;
+            virtual void LockConstantBuffer(Resource resource, const bpf::fint reg) noexcept = 0;
             virtual void UpdateConstantBuffer(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
-            virtual void LockTexture(Resource resource, const bpf::fint reg, const int stageFlags = LOCK_ALL_STAGE) noexcept = 0;
+            virtual void LockTexture(Resource resource, const bpf::fint reg) noexcept = 0;
             virtual void UpdateTexture(Resource resource, const void *data, const bpf::fsize size) noexcept = 0;
-            virtual void LockSampler(Resource resource, const bpf::fint reg, const int stageFlags = LOCK_ALL_STAGE) noexcept = 0;
+            virtual void LockSampler(Resource resource, const bpf::fint reg) noexcept = 0;
             virtual void SetRenderTarget(Resource resource) noexcept = 0;
             virtual Resource GetRenderTarget() noexcept = 0;
             virtual void LockIndexBuffer(Resource resource) noexcept = 0;

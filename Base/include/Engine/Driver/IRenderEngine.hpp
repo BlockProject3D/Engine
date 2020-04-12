@@ -82,7 +82,9 @@ namespace bp3d
             bool SupportsMultiBlending;
 
             /**
-             * Bool set to true if the underlying rendering API allows independent shader stages
+             * Bool set to true if the underlying rendering API uses independent stage bindings
+             * Typically set to true for DirectX 11 renderer but set to false for both DirectX 12 and GL
+             * Indeed it actually comes to be faster to not use independent stage bindings as this increases root signature cost
              */
             bool IndependentStage;
 

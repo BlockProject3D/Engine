@@ -29,6 +29,9 @@
 #pragma once
 #include <d3d11.h>
 
+/**
+ * Here the use of structures is to allow the compiler to perform certain optimizations as those structs are pure C compatible types
+ */
 namespace dx11
 {
     struct Texture2D
@@ -53,6 +56,9 @@ namespace dx11
 
     struct ShaderProgram
     {
+        int StageFlagsSamplers[16];
+        int StageFlagsTextures[16];
+        int StageFlagsCBuffers[16];
         ID3D11VertexShader *Vertex;
         ID3D11GeometryShader *Geometry;
         ID3D11PixelShader *Pixel;
@@ -64,6 +70,12 @@ namespace dx11
     {
         ID3D11BlendState *BlendState;
         bpf::math::Vector4f Factor;
+    };
+
+    struct FixedConstantBuffer
+    {
+        ID3D11Buffer *Buffer;
+        int Register;
     };
 
     struct Pipeline

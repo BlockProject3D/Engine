@@ -35,6 +35,13 @@ namespace bp3d
 {
     namespace driver
     {
+        constexpr int LOCK_VERTEX_STAGE = 0x1;
+        constexpr int LOCK_HULL_STAGE = 0x2;
+        constexpr int LOCK_DOMAIN_STAGE = 0x4;
+        constexpr int LOCK_GEOMETRY_STAGE = 0x8;
+        constexpr int LOCK_PIXEL_STAGE = 0x10;
+        constexpr int LOCK_ALL_STAGE = LOCK_VERTEX_STAGE | LOCK_HULL_STAGE | LOCK_DOMAIN_STAGE | LOCK_GEOMETRY_STAGE | LOCK_PIXEL_STAGE;
+
         enum class BP3D_API EShaderType
         {
             /**
@@ -63,6 +70,14 @@ namespace bp3d
             PIXEL
         };
 
+        enum class BP3D_API EBindingType
+        {
+            TEXTURE,
+            SAMPLER,
+            CONSTANT_BUFFER,
+            FIXED_CONSTANT_BUFFER
+        };
+
         struct BP3D_API ShaderDescriptor
         {
             EShaderType Type;
@@ -70,9 +85,17 @@ namespace bp3d
             void *Data;
         };
 
+        struct BP3D_API ShaderBindingDescriptor
+        {
+            int Register;
+            int StageFlags;
+            EBindingType Type;
+        };
+
         struct BP3D_API ShaderProgramDescriptor
         {
             bpf::collection::ArrayList<ShaderDescriptor> Shaders;
+            bpf::collection::ArrayList<ShaderBindingDescriptor> Bindings;
         };
     }
 }
