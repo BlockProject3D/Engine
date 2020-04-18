@@ -294,10 +294,9 @@ void DX11RenderContext::Clear(const bool colorBuffer, const bool depthBuffer) no
     }
 }
 
-bool DX11RenderContext::ReadPixels(void *, const bpf::fint, const bpf::fint, const bpf::fsize, const bpf::fsize) noexcept
+void DX11RenderContext::ReadPixels(void *, const bpf::fint, const bpf::fint, const bpf::fsize, const bpf::fsize) noexcept
 {
     //Not implemented yet: amazingly complex to do under DX11
-    return (false);
 }
 
 void DX11RenderContext::SetViewport(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept

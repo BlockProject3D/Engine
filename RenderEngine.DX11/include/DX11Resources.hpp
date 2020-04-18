@@ -72,12 +72,6 @@ namespace dx11
         bpf::math::Vector4f Factor;
     };
 
-    struct FixedConstantBuffer
-    {
-        ID3D11Buffer *Buffer;
-        int Register;
-    };
-
     struct Pipeline
     {
         ShaderProgram Program;

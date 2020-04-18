@@ -959,20 +959,24 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocPipeline(const bp3d::driver::
 bp3d::driver::Resource DX11ResourceAllocator::AllocFixedConstantBuffer(const bp3d::driver::EBufferType type, const int reg, const bp3d::driver::BufferDescriptor &descriptor)
 {
     ID3D11Buffer *buffer = reinterpret_cast<ID3D11Buffer *>(AllocConstantBuffer(type, descriptor));
-    FixedConstantBuffer *buf = static_cast<FixedConstantBuffer *>(bpf::memory::Memory::Malloc(sizeof(FixedConstantBuffer)));
-    buf->Register = reg;
     if ((reg + 1) > _fixedConstBufs.Size())
         _fixedConstBufs.Resize(reg + 1);
     _fixedConstBufs[reg] = buffer;
-    return (buf);
+    return (buffer);
 }
 
 void DX11ResourceAllocator::FreeFixedConstantBuffer(bp3d::driver::Resource resource)
 {
-    FixedConstantBuffer *buf = reinterpret_cast<FixedConstantBuffer *>(resource);
-    buf->Buffer->Release();
-    _fixedConstBufs[buf->Register] = Null;
-    bpf::memory::Memory::Free(buf);
+    ID3D11Buffer *buf = reinterpret_cast<ID3D11Buffer *>(resource);
+    for (bpf::fsize i = 0; i != _fixedConstBufs.Size(); ++i)
+    {
+        if (_fixedConstBufs[i] == buf)
+        {
+            _fixedConstBufs[i] = Null;
+            break;
+        }
+    }
+    buf->Release();
 }
 
 void DX11ResourceAllocator::FreePipeline(bp3d::driver::Resource resource)

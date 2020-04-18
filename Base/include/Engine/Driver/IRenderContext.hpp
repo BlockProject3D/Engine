@@ -60,7 +60,19 @@ namespace bp3d
             virtual void DrawInstanced(const bpf::uint32 index, const bpf::uint32 count, const bpf::uint32 instanceCount) noexcept = 0;
             virtual void DrawIndexed(const bpf::uint32 index, const bpf::uint32 count) noexcept = 0;
             virtual void Clear(const bool colorBuffer = false, const bool depthBuffer = true) noexcept = 0;
-            virtual bool ReadPixels(void *output, const bpf::fint x, const bpf::fint y, const bpf::fsize w, const bpf::fsize h) noexcept = 0;
+
+            /**
+             * Reads the pixels in the rectangle x, y, w, h
+             * It is undefined to attempt reading pixels with a render target set other than the back buffer (SetRenderTarget(Null))
+             * In the case the boolean flag InvertTextureSpace is set to true the read picture will be flipped upside down to match the rendering API specs
+             * The format of the back buffer is always set to uint8 RGBA
+             * @param output the output destination memory buffer for the read pixels; it is expected to have enough space to contain all wanted pixels
+             * @param x the x coordinate of the rectangle
+             * @param y the y coordinate of the rectangle
+             * @param w the width of the rectangle
+             * @param h the height of the rectangle
+             */
+            virtual void ReadPixels(void *output, const bpf::fint x, const bpf::fint y, const bpf::fsize w, const bpf::fsize h) noexcept = 0;
             virtual void SetViewport(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept = 0;
             virtual void SetScissor(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept = 0;
         };

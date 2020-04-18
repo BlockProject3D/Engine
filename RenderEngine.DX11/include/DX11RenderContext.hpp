@@ -84,7 +84,7 @@ namespace dx11
         void DrawInstanced(const bpf::uint32 index, const bpf::uint32 count, const bpf::uint32 instanceCount) noexcept;
         void DrawIndexed(const bpf::uint32 index, const bpf::uint32 count) noexcept;
         void Clear(const bool colorBuffer = false, const bool depthBuffer = true) noexcept;
-        bool ReadPixels(void *output, const bpf::fint x, const bpf::fint y, const bpf::fsize w, const bpf::fsize h) noexcept;
+        void ReadPixels(void *output, const bpf::fint x, const bpf::fint y, const bpf::fsize w, const bpf::fsize h) noexcept;
         void SetViewport(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept;
         void SetScissor(const bpf::fint x, bpf::fint y, bpf::fsize w, bpf::fsize h) noexcept;
     };
