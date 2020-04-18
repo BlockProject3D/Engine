@@ -35,6 +35,8 @@ namespace gl40
     class GL40ResourceAllocator final : public bp3d::driver::IResourceAllocator
     {
     private:
+        bpf::collection::Array<GLuint> _fixedConstBufs;
+
         void SetupTextureFormat(const bp3d::driver::TextureDescriptor &descriptor, GLenum &internalFormat, GLenum &format, GLenum &t, GLsizei &slicemempitch);
         GLenum TranslateBlendOp(const bp3d::driver::EBlendOp op);
         GLenum TranslateBlendFactor(const bp3d::driver::EBlendFactor factor);
@@ -48,12 +50,14 @@ namespace gl40
         bp3d::driver::Resource AllocRenderTargetComponent(const bp3d::driver::RenderTargetComponentDescriptor &descriptor);
         bp3d::driver::Resource AllocRenderTarget(const bp3d::driver::RenderTargetDescriptor &descriptor);
         bp3d::driver::Resource AllocConstantBuffer(const bp3d::driver::EBufferType type, const bp3d::driver::BufferDescriptor &descriptor);
+        bp3d::driver::Resource AllocFixedConstantBuffer(const bp3d::driver::EBufferType type, const int reg, const bp3d::driver::BufferDescriptor &descriptor);
         bp3d::driver::Resource AllocVertexFormat(const bp3d::driver::VertexFormatDescriptor &descriptor);
         bp3d::driver::Resource AllocVertexBuffer(const bp3d::driver::EBufferType type, bp3d::driver::Resource vformat, const bp3d::driver::BufferDescriptor &buffer);
         bp3d::driver::Resource AllocIndexBuffer(const bp3d::driver::EBufferType type, const bp3d::driver::BufferDescriptor &descriptor);
         bp3d::driver::Resource AllocShaderProgram(const bp3d::driver::ShaderProgramDescriptor &descriptor);
         bp3d::driver::Resource AllocBlendState(const bp3d::driver::BlendStateDescriptor &descriptor);
         bp3d::driver::Resource AllocPipeline(const bp3d::driver::PipelineDescriptor &descriptor);
+        void FreeFixedConstantBuffer(bp3d::driver::Resource resource);
         void FreeVertexFormat(bp3d::driver::Resource resource);
         void FreePipeline(bp3d::driver::Resource resource);
         void FreeDepthBuffer(bp3d::driver::Resource resource);
@@ -66,5 +70,7 @@ namespace gl40
         void FreeConstantBuffer(bp3d::driver::Resource resource);
         void FreeVertexBuffer(bp3d::driver::Resource resource);
         void FreeIndexBuffer(bp3d::driver::Resource resource);
+        void FreeShaderProgram(bp3d::driver::Resource resource);
+        void FreeBlendState(bp3d::driver::Resource resource);
     };
 }

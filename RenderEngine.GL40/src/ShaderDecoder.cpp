@@ -26,82 +26,37 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#pragma once
-#include <glad.h>
-#include <Engine\Driver\VertexFormatDescriptor.hpp>
+#include <cstring>
+#include "ShaderDecoder.hpp"
+#include <Framework/System/Platform.hpp>
+#include <Framework/RuntimeException.hpp>
 
-namespace gl40
+using namespace gl40;
+
+ShaderDecoder::ShaderDecoder(const void *data, const bpf::fsize size)
 {
-#ifdef X86_64
-    union ObjectResource
-    {
-        GLuint Ptrs[2];
-        bp3d::driver::Resource Data;
-    };
+    BPGLSLHeader header = *reinterpret_cast<const BPGLSLHeader *>(data);
+    if (bpf::system::Platform::GetEndianess() != bpf::system::EPlatformEndianess::PLATFORM_LITTLEENDIAN)
+        bpf::system::Platform::ReverseBuffer(&header.Size, 4); //We know the size of a bpf::uint32 is always 32 bits or 4 bytes
+    if (header.Signature[0] != 'B' || header.Signature[1] != 'P' || header.Signature[2] != 'G' || header.Signature[3] != 'L')
+        throw bpf::RuntimeException("RenderEngine", "Invalid BPGLSL shader");
+    if (header.Version != 0)
+        throw bpf::RuntimeException("RenderEngine", "Unrecognized BPGLSL version");
+    if (sizeof(BPGLSLHeader) + header.Size > size)
+        throw bpf::RuntimeException("RenderEngine", "Invalid or corrupted BPGLSL shader");
+    const char *shader = reinterpret_cast<const char *>(data) + sizeof(BPGLSLHeader);
+    _shaderCode = shader;
+    _metadata = shader + header.Size;
+    _size = header.Size;
+    _ucount = header.UniformCount;
+}
 
-    struct VertexBufferInner
-    {
-        GLuint VBO;
-        GLuint VAO;
-    };
-
-    union VertexBuffer
-    {
-        VertexBufferInner Data;
-        bp3d::driver::Resource Ptr;
-    };
-#else
-    union ObjectResource
-    {
-        GLuint Ptr;
-        bp3d::driver::Resource Data;
-    };
-#endif
-
-    struct VertexFormat
-    {
-        bpf::collection::Array<bp3d::driver::EVertexComponentType> Components;
-        GLsizei Stride;
-    };
-
-    struct BlendState
-    {
-        bpf::uintptr HashCode;
-        GLenum SrcColor;
-        GLenum DstColor;
-        GLenum SrcAlpha;
-        GLenum DstAlpha;
-        GLenum AlphaOp;
-        GLenum ColorOp;
-        bool Enable;
-        bpf::math::Vector4f Factor;
-    };
-
-    struct Texture2D
-    {
-        GLuint TexId;
-        GLenum Target;
-        GLsizei Width;
-        GLenum Format;
-        GLenum Type;
-    };
-
-    struct Pipeline
-    {
-        GLuint Program;
-        BlendState BlendState;
-        bool DepthEnable;
-        bool DepthWriteEnable;
-        bool ScissorEnable;
-        GLenum RenderMode;
-        GLenum CullingMode;
-    };
-
-#ifdef X86
-    struct VertexBuffer
-    {
-        GLuint VBO;
-        GLuint VAO;
-    };
-#endif
+bool ShaderDecoder::GetNextUniform(BPGLSLUniform &uniform) noexcept
+{
+    if (_ucount == 0)
+        return (false);
+    uniform.Register = (bpf::uint8)_metadata[0];
+    uniform.Name = _metadata + 1;
+    _metadata += std::strlen(_metadata) + 2;
+    --_ucount;
 }

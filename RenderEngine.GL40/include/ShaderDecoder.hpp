@@ -27,81 +27,49 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <glad.h>
-#include <Engine\Driver\VertexFormatDescriptor.hpp>
+#include <Framework/Types.hpp>
 
 namespace gl40
 {
-#ifdef X86_64
-    union ObjectResource
+    struct BPGLSLHeader
     {
-        GLuint Ptrs[2];
-        bp3d::driver::Resource Data;
+        char Signature[4];
+        bpf::uint32 Size;
+        bpf::uint8 UniformCount;
+        bpf::uint8 Version;
+        char Reserved[16];
     };
 
-    struct VertexBufferInner
+    struct BPGLSLUniform
     {
-        GLuint VBO;
-        GLuint VAO;
+        const char *Name;
+        bpf::uint8 Register;
     };
 
-    union VertexBuffer
+    /**
+     * Helper class to parse BPGLSL
+     * BPGLSL or BlockProjectGLSL is a GLSL code containding additional metadata required to properly link the shader
+     */
+    class ShaderDecoder
     {
-        VertexBufferInner Data;
-        bp3d::driver::Resource Ptr;
-    };
-#else
-    union ObjectResource
-    {
-        GLuint Ptr;
-        bp3d::driver::Resource Data;
-    };
-#endif
+    private:
+        const char *_shaderCode;
+        const char *_metadata;
+        bpf::uint8 _ucount;
+        bpf::uint32 _size;
 
-    struct VertexFormat
-    {
-        bpf::collection::Array<bp3d::driver::EVertexComponentType> Components;
-        GLsizei Stride;
-    };
+    public:
+        ShaderDecoder(const void *data, const bpf::fsize size);
+        bool GetNextUniform(BPGLSLUniform &uniform) noexcept;
 
-    struct BlendState
-    {
-        bpf::uintptr HashCode;
-        GLenum SrcColor;
-        GLenum DstColor;
-        GLenum SrcAlpha;
-        GLenum DstAlpha;
-        GLenum AlphaOp;
-        GLenum ColorOp;
-        bool Enable;
-        bpf::math::Vector4f Factor;
-    };
+        inline const char *GetShaderCodePtr() const noexcept
+        {
+            return (_shaderCode);
+        }
 
-    struct Texture2D
-    {
-        GLuint TexId;
-        GLenum Target;
-        GLsizei Width;
-        GLenum Format;
-        GLenum Type;
+        inline bpf::uint32 GetShaderCodeSize() const noexcept
+        {
+            return (_size);
+        }
     };
-
-    struct Pipeline
-    {
-        GLuint Program;
-        BlendState BlendState;
-        bool DepthEnable;
-        bool DepthWriteEnable;
-        bool ScissorEnable;
-        GLenum RenderMode;
-        GLenum CullingMode;
-    };
-
-#ifdef X86
-    struct VertexBuffer
-    {
-        GLuint VBO;
-        GLuint VAO;
-    };
-#endif
 }

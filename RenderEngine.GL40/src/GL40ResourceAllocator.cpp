@@ -29,6 +29,7 @@
 #include <Framework/RuntimeException.hpp>
 #include "GL40ResourceAllocator.hpp"
 #include "GL40Resources.hpp"
+#include "ShaderDecoder.hpp"
 
 using namespace gl40;
 
@@ -98,17 +99,13 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocTexture2D(const bp3d::driver:
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, (GLsizei)descriptor.Width, (GLsizei)descriptor.Height, 0, format, t, descriptor.Data);
     if (descriptor.MipMaps > 1)
         glGenerateMipmap(GL_TEXTURE_2D);
-#ifdef X86_64
-    Texture2D res;
-    res.Data.Target = GL_TEXTURE_2D;
-    res.Data.TexId = tex;
-    return (res.Ptr);
-#else
-    Texture2D *texture = static_cast<Texture2D *>(bpf::memory::Memory::Malloc(sizeof(Texture2D)));
-    texture->Target = GL_TEXTURE_2D;
-    texture->TexId = tex;
-    return (texture);
-#endif
+    Texture2D *res = static_cast<Texture2D *>(bpf::memory::Memory::Malloc(sizeof(Texture2D)));
+    res->Target = GL_TEXTURE_2D;
+    res->TexId = tex;
+    res->Width = (GLsizei)descriptor.Width;
+    res->Format = format;
+    res->Type = t;
+    return (res);
 }
 
 bp3d::driver::Resource GL40ResourceAllocator::AllocTexture2DArray(const bp3d::driver::EBufferType, const bp3d::driver::TextureDescriptor &descriptor, const bpf::fsize layers)
@@ -130,17 +127,13 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocTexture2DArray(const bp3d::dr
         glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, (GLint)i, (GLsizei)descriptor.Width, (GLsizei)descriptor.Height, 1, format, t, ptr + (i * slicemempitch));
     if (descriptor.MipMaps > 1)
         glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-#ifdef X86_64
-    Texture2D res;
-    res.Data.Target = GL_TEXTURE_2D_ARRAY;
-    res.Data.TexId = tex;
-    return (res.Ptr);
-#else
-    Texture2D *texture = static_cast<Texture2D *>(bpf::memory::Memory::Malloc(sizeof(Texture2D)));
-    texture->Target = GL_TEXTURE_2D_ARRAY;
-    texture->TexId = tex;
-    return (texture);
-#endif
+    Texture2D *res = static_cast<Texture2D *>(bpf::memory::Memory::Malloc(sizeof(Texture2D)));
+    res->Target = GL_TEXTURE_2D_ARRAY;
+    res->TexId = tex;
+    res->Width = (GLsizei)descriptor.Width;
+    res->Format = format;
+    res->Type = t;
+    return (res);
 }
 
 bp3d::driver::Resource GL40ResourceAllocator::AllocTextureCube(const bp3d::driver::EBufferType, const bp3d::driver::TextureDescriptor &descriptor)
@@ -161,17 +154,13 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocTextureCube(const bp3d::drive
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, (GLsizei)descriptor.Width, (GLsizei)descriptor.Height, 0, format, t, ptr + (i * slicemempitch));
     if (descriptor.MipMaps > 1)
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-#ifdef X86_64
-    Texture2D res;
-    res.Data.Target = GL_TEXTURE_CUBE_MAP;
-    res.Data.TexId = tex;
-    return (res.Ptr);
-#else
-    Texture2D *texture = static_cast<Texture2D *>(bpf::memory::Memory::Malloc(sizeof(Texture2D)));
-    texture->Target = GL_TEXTURE_CUBE_MAP;
-    texture->TexId = tex;
-    return (texture);
-#endif
+    Texture2D *res = static_cast<Texture2D *>(bpf::memory::Memory::Malloc(sizeof(Texture2D)));
+    res->Target = GL_TEXTURE_CUBE_MAP;
+    res->TexId = tex;
+    res->Width = (GLsizei)descriptor.Width;
+    res->Format = format;
+    res->Type = t;
+    return (res);
 }
 
 bp3d::driver::Resource GL40ResourceAllocator::AllocSampler(const bp3d::driver::SamplerDescriptor &descriptor)
@@ -221,17 +210,13 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocRenderTargetComponent(const b
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, (GLsizei)descriptor.Texture.Width, (GLsizei)descriptor.Texture.Height, 0, format, t, Null);
-#ifdef X86_64
-    Texture2D res;
-    res.Data.Target = GL_TEXTURE_2D;
-    res.Data.TexId = tex;
-    return (res.Ptr);
-#else
-    Texture2D *texture = static_cast<Texture2D *>(bpf::memory::Memory::Malloc(sizeof(Texture2D)));
-    texture->Target = GL_TEXTURE_2D;
-    texture->TexId = tex;
-    return (texture);
-#endif
+    Texture2D *res = static_cast<Texture2D *>(bpf::memory::Memory::Malloc(sizeof(Texture2D)));
+    res->Target = GL_TEXTURE_2D;
+    res->TexId = tex;
+    res->Width = (GLsizei)descriptor.Texture.Width;
+    res->Format = format;
+    res->Type = t;
+    return (res);
 }
 
 bp3d::driver::Resource GL40ResourceAllocator::AllocDepthBuffer(const bpf::fsize width, const bpf::fsize height, const bp3d::driver::EDepthBufferFormat format)
@@ -259,17 +244,13 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocRenderTarget(const bp3d::driv
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         throw bpf::RuntimeException("RenderEngine", "glGenFramebuffers failed");
+    bpf::collection::Array<GLuint> textures(descriptor.Components.Size());
     for (bpf::fsize i = 0; i != descriptor.Components.Size(); ++i)
     {
-#ifdef X86_64
-        Texture2D res;
-        res.Ptr = descriptor.Components[i];
-        GLuint texture = res.Data.TexId;
-#else
-        Texture2D *t = reinterpret_cast<Texture2D *>(descriptor.Components[i]);
-        GLuint texture = t->TexId;
-#endif
+        Texture2D *res = reinterpret_cast<Texture2D *>(descriptor.Components[i]);
+        GLuint texture = res->TexId;
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (GLenum)i, GL_TEXTURE_2D, texture, 0);
+        textures[i] = texture;
     }
     if (descriptor.DepthBuffer != Null)
     {
@@ -282,6 +263,7 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocRenderTarget(const bp3d::driv
 #endif
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
     }
+    glDrawBuffers((GLsizei)textures.Size(), *textures);
     ObjectResource res;
 #ifdef X86_64
     res.Ptrs[0] = fbo;
@@ -313,6 +295,34 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocConstantBuffer(const bp3d::dr
 #else
     res.Ptr = ubo;
 #endif
+    return (res.Data);
+}
+
+bp3d::driver::Resource GL40ResourceAllocator::AllocFixedConstantBuffer(const bp3d::driver::EBufferType type, const int reg, const bp3d::driver::BufferDescriptor &descriptor)
+{
+    GLenum t = 0;
+    GLuint ubo;
+    switch (type)
+    {
+    case bp3d::driver::EBufferType::DYNAMIC:
+        t = GL_DYNAMIC_DRAW;
+        break;
+    case bp3d::driver::EBufferType::STATIC:
+        t = GL_STATIC_DRAW;
+        break;
+    }
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, descriptor.Size, descriptor.Data, t);
+    ObjectResource res;
+#ifdef X86_64
+    res.Ptrs[0] = ubo;
+#else
+    res.Ptr = ubo;
+#endif
+    if ((reg + 1) > _fixedConstBufs.Size())
+        _fixedConstBufs.Resize(reg + 1);
+    _fixedConstBufs[reg] = ubo;
     return (res.Data);
 }
 
@@ -470,6 +480,7 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocIndexBuffer(const bp3d::drive
 
 bp3d::driver::Resource GL40ResourceAllocator::AllocShaderProgram(const bp3d::driver::ShaderProgramDescriptor &descriptor)
 {
+    bpf::collection::ArrayList<BPGLSLUniform> uniforms;
     GLuint shaders[3];
     GLint i = 0;
     for (auto &shader : descriptor.Shaders)
@@ -488,9 +499,10 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocShaderProgram(const bp3d::dri
             break;
         }
         GLuint shaderId = glCreateShader(type);
-        const GLchar *arr = reinterpret_cast<const GLchar *>(shader.Data);
-        const GLint *size = reinterpret_cast<const GLint *>(shader.Size);
-        glShaderSource(shaderId, 1, &arr, size);
+        ShaderDecoder decoder(shader.Data, shader.Size);
+        const GLchar *arr = decoder.GetShaderCodePtr();
+        const GLint size = (GLint)decoder.GetShaderCodeSize();
+        glShaderSource(shaderId, 1, &arr, &size);
         glCompileShader(shaderId);
         GLint success;
         glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
@@ -503,6 +515,9 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocShaderProgram(const bp3d::dri
             throw bpf::RuntimeException("RenderEngine", bpf::String("Error compiling shader: ") + infoLog);
         }
         shaders[i++] = shaderId;
+        BPGLSLUniform uniform;
+        while (decoder.GetNextUniform(uniform))
+            uniforms.Add(uniform);
     }
     GLuint prog = glCreateProgram();
     for (GLint j = 0; j != i; ++j)
@@ -515,6 +530,17 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocShaderProgram(const bp3d::dri
     {
         glGetShaderInfoLog(prog, 512, Null, infoLog);
         throw bpf::RuntimeException("RenderEngine", bpf::String("Error linking shader program: ") + infoLog);
+    }
+    glUseProgram(prog);
+    for (auto &uniform : uniforms)
+    {
+        auto loc = glGetUniformLocation(prog, uniform.Name);
+        glUniform1i(loc, (GLint)uniform.Register);
+    }
+    for (auto &bind : descriptor.Bindings)
+    {
+        if (bind.Type == bp3d::driver::EBindingType::FIXED_CONSTANT_BUFFER)
+            glBindBufferBase(GL_UNIFORM_BUFFER, bind.Register, _fixedConstBufs[bind.Register]);
     }
     for (GLint j = 0; j != i; ++j)
         glDeleteShader(shaders[j]);
@@ -597,6 +623,7 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocBlendState(const bp3d::driver
     state->SrcAlpha = TranslateBlendFactor(target.SrcAlpha);
     state->DstAlpha = TranslateBlendFactor(target.DstAlpha);
     state->Factor = descriptor.Factor;
+    state->HashCode = (bpf::uintptr)state;
     return (state);
 }
 
@@ -611,9 +638,11 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocPipeline(const bp3d::driver::
 #else
     GLuint prg = prog.Ptr;
 #endif
-    pipeline->BlendState = *state;
+    if (state == Null)
+        pipeline->BlendState.Enable = false;
+    else
+        pipeline->BlendState = *state;
     pipeline->Program = prg;
-    bpf::memory::Memory::Free(state);
     pipeline->DepthWriteEnable = descriptor.DepthWriteEnable;
     pipeline->DepthEnable = descriptor.DepthEnable;
     switch (descriptor.CullingMode)
@@ -641,11 +670,32 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocPipeline(const bp3d::driver::
     return (pipeline);
 }
 
+void GL40ResourceAllocator::FreeFixedConstantBuffer(bp3d::driver::Resource resource)
+{
+    FreeConstantBuffer(resource);
+}
+
 void GL40ResourceAllocator::FreePipeline(bp3d::driver::Resource resource)
 {
     Pipeline *pipeline = reinterpret_cast<Pipeline *>(resource);
-    glDeleteProgram(pipeline->Program);
     bpf::memory::Memory::Free(pipeline);
+}
+
+void GL40ResourceAllocator::FreeShaderProgram(bp3d::driver::Resource resource)
+{
+    ObjectResource res;
+    res.Data = resource;
+#ifdef X86_64
+    glDeleteProgram(res.Ptrs[0]);
+#else
+    glDeleteProgram(res.Ptr);
+#endif
+}
+
+void GL40ResourceAllocator::FreeBlendState(bp3d::driver::Resource resource)
+{
+    BlendState *state = reinterpret_cast<BlendState *>(resource);
+    bpf::memory::Memory::Free(state);
 }
 
 void GL40ResourceAllocator::FreeDepthBuffer(bp3d::driver::Resource resource)
@@ -662,15 +712,9 @@ void GL40ResourceAllocator::FreeDepthBuffer(bp3d::driver::Resource resource)
 
 void GL40ResourceAllocator::FreeRenderTargetComponent(bp3d::driver::Resource resource)
 {
-#ifdef X86_64
-    Texture2D res;
-    res.Ptr = resource;
-    glDeleteTextures(1, &res.Data.TexId);
-#else
-    Texture2D *texture = reinterpret_cast<Texture2D *>(resource);
-    glDeleteTextures(1, &texture->TexId);
-    bpf::memory::Memory::Free(texture);
-#endif
+    Texture2D *res = reinterpret_cast<Texture2D *>(resource);
+    glDeleteTextures(1, &res->TexId);
+    bpf::memory::Memory::Free(res);
 }
 
 void GL40ResourceAllocator::FreeRenderTarget(bp3d::driver::Resource resource)
@@ -687,41 +731,23 @@ void GL40ResourceAllocator::FreeRenderTarget(bp3d::driver::Resource resource)
 
 void GL40ResourceAllocator::FreeTexture2D(bp3d::driver::Resource resource)
 {
-#ifdef X86_64
-    Texture2D res;
-    res.Ptr = resource;
-    glDeleteTextures(1, &res.Data.TexId);
-#else
-    Texture2D *texture = reinterpret_cast<Texture2D *>(resource);
-    glDeleteTextures(1, &texture->TexId);
-    bpf::memory::Memory::Free(texture);
-#endif
+    Texture2D *res = reinterpret_cast<Texture2D *>(resource);
+    glDeleteTextures(1, &res->TexId);
+    bpf::memory::Memory::Free(res);
 }
 
 void GL40ResourceAllocator::FreeTexture2DArray(bp3d::driver::Resource resource)
 {
-#ifdef X86_64
-    Texture2D res;
-    res.Ptr = resource;
-    glDeleteTextures(1, &res.Data.TexId);
-#else
-    Texture2D *texture = reinterpret_cast<Texture2D *>(resource);
-    glDeleteTextures(1, &texture->TexId);
-    bpf::memory::Memory::Free(texture);
-#endif
+    Texture2D *res = reinterpret_cast<Texture2D *>(resource);
+    glDeleteTextures(1, &res->TexId);
+    bpf::memory::Memory::Free(res);
 }
 
 void GL40ResourceAllocator::FreeTextureCube(bp3d::driver::Resource resource)
 {
-#ifdef X86_64
-    Texture2D res;
-    res.Ptr = resource;
-    glDeleteTextures(1, &res.Data.TexId);
-#else
-    Texture2D *texture = reinterpret_cast<Texture2D *>(resource);
-    glDeleteTextures(1, &texture->TexId);
-    bpf::memory::Memory::Free(texture);
-#endif
+    Texture2D *res = reinterpret_cast<Texture2D *>(resource);
+    glDeleteTextures(1, &res->TexId);
+    bpf::memory::Memory::Free(res);
 }
 
 void GL40ResourceAllocator::FreeSampler(bp3d::driver::Resource resource)

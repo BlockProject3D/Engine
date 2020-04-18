@@ -9,8 +9,12 @@ set(SOURCES
     include/glad.h
     include/KHR/khrplatform.h
     include/GL40Resources.hpp
+    include/GL40RenderContext.hpp
+    include/ShaderDecoder.hpp
     src/glad.c
     src/GL40ResourceAllocator.cpp
+    src/GL40RenderContext.cpp
+    src/ShaderDecoder.cpp
 )
 
 #This macro will never be used as driver modules do not have any API they map to existing APIs
