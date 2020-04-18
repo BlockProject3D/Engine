@@ -79,6 +79,7 @@ bp3d::driver::Resource AttemptBuildShaderProg(const Paths &paths, const memory::
     prog.Bindings.Add(bind);
     bind.Type = bp3d::driver::EBindingType::SAMPLER;
     prog.Bindings.Add(bind);
+    prog.RenderTargetOutputTypes.Add(bp3d::driver::ETextureFormat::RGBA_UINT_8);
     return (allocator.AllocShaderProgram(prog));
 }
 
@@ -121,8 +122,6 @@ bp3d::driver::Resource AttemptBuildPipeline(bp3d::driver::IResourceAllocator &al
     desc.DepthWriteEnable = false;
     desc.CullingMode = bp3d::driver::ECullingMode::BACK_FACE;
     desc.RenderMode = bp3d::driver::ERenderMode::TRIANGLES;
-    desc.RenderTargetOutputCount = 1;
-    desc.RenderTargetOutputTypes.Add(bp3d::driver::ETextureFormat::RGBA_UINT_8);
     desc.ScissorEnable = false;
     desc.ShaderProgram = shaderProg;
     desc.VertexFormat = vformat;

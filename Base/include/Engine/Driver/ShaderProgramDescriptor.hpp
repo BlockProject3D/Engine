@@ -30,6 +30,7 @@
 #undef DOMAIN
 #include <Framework/Types.hpp>
 #include <Framework/Collection/ArrayList.hpp>
+#include "Engine/Driver/TextureDescriptor.hpp"
 
 namespace bp3d
 {
@@ -96,6 +97,7 @@ namespace bp3d
         {
             bpf::collection::ArrayList<ShaderDescriptor> Shaders;
             bpf::collection::ArrayList<ShaderBindingDescriptor> Bindings;
+            bpf::collection::ArrayList<ETextureFormat> RenderTargetOutputTypes;
         };
     }
 }

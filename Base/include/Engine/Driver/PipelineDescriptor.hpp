@@ -29,7 +29,6 @@
 #pragma once
 #include <Framework/Types.hpp>
 #include <Framework/Collection/ArrayList.hpp>
-#include "Engine/Driver/TextureDescriptor.hpp"
 #include "Engine/Driver/Resource.hpp"
 
 namespace bp3d
@@ -55,13 +54,11 @@ namespace bp3d
             Resource ShaderProgram;
             Resource BlendState;
             Resource VertexFormat;
-            bpf::collection::ArrayList<ETextureFormat> RenderTargetOutputTypes;
             bool DepthEnable;
             bool DepthWriteEnable;
             bool ScissorEnable;
             ERenderMode RenderMode;
             ECullingMode CullingMode;
-            bpf::uint8 RenderTargetOutputCount;
         };
     }
 }
