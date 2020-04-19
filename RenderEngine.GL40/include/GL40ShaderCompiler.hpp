@@ -28,55 +28,21 @@
 
 #pragma once
 #include <Engine/Driver/IShaderCompiler.hpp>
-#include <d3dcompiler.h>
 
-namespace dx11
+namespace gl40
 {
-    class DX11Shader final : public bp3d::driver::IShader
+    class GL40ShaderCompiler : public bp3d::driver::IShaderCompiler
     {
     private:
-        ID3DBlob *_blob;
-        bpf::collection::ArrayList<bp3d::driver::IShader::Binding> _bindings;
-        bpf::collection::ArrayList<bp3d::driver::IShader::PixelOutput> _pouts;
-
-        bpf::String ExtractName(const bpf::String &tname);
-        bpf::String ExtractType(const bpf::String &tname);
-        bool IsAlphaNum(const bpf::fchar ch);
-
-    public:
-        DX11Shader(ID3DBlob *blob, const bpf::String &code, const bp3d::driver::EShaderType type);
-        ~DX11Shader();
-        bpf::io::ByteBuf ToByteBuf();
-        const bpf::collection::ArrayList<bp3d::driver::IShader::Binding> &GetBindings() const noexcept
-        {
-            return (_bindings);
-        }
-        const bpf::collection::ArrayList<bp3d::driver::IShader::PixelOutput> &GetPixelOutputs() const noexcept
-        {
-            return (_pouts);
-        }
-    };
-
-    class DX11ShaderCompiler final : public bp3d::driver::IShaderCompiler
-    {
-    private:
-        bpf::fint _flags;
-        bpf::collection::ArrayList<D3D_SHADER_MACRO> _macros;
         bpf::collection::ArrayList<bpf::String> _macroNames;
         bpf::collection::ArrayList<bpf::String> _macroValues;
 
     public:
-        inline DX11ShaderCompiler()
-            : _flags(0)
-        {
-        }
-
         void SetMacro(const bpf::String &name, const bpf::String &value);
-        inline void SetCompileFlags(const bpf::fint flags)
-        {
-            _flags = flags;
-        }
-        bpf::memory::UniquePtr<bp3d::driver::IShader> Compile(const bpf::String &code, const bpf::String &name, const bp3d::driver::EShaderType type);
+        void SetCompileFlags(const bpf::fint flags);
+        bp3d::driver::Resource Compile(const bpf::String &code, const bpf::String &name, const bp3d::driver::EShaderType type);
         void Link();
+        bpf::io::ByteBuf GetShaderByteCode(bp3d::driver::Resource resource);
+        void FreeHandle(bp3d::driver::Resource resource);
     };
 }

@@ -26,13 +26,13 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <Framework/System/IApplication.hpp>
-#include <Framework/System/Platform.hpp>
+#include <Engine/Driver/IRenderEngine.hpp>
 #include <Framework/IO/ConsoleWriter.hpp>
 #include <Framework/IO/FileStream.hpp>
 #include <Framework/IO/TextReader.hpp>
+#include <Framework/System/IApplication.hpp>
 #include <Framework/System/ModuleManager.hpp>
-#include <Engine/Driver/IRenderEngine.hpp>
+#include <Framework/System/Platform.hpp>
 
 using namespace bpf::system;
 using namespace bpf::collection;
@@ -41,6 +41,7 @@ using namespace bpf;
 
 bp3d::driver::Resource AttemptBuildShaderProg(const Paths &paths, const memory::UniquePtr<bp3d::driver::IRenderEngine> &re, bp3d::driver::IResourceAllocator &allocator)
 {
+    auto newLine = Platform::GetOSInfo().NewLine;
     String vShader;
     String pShader;
     {
@@ -55,13 +56,48 @@ bp3d::driver::Resource AttemptBuildShaderProg(const Paths &paths, const memory::
     }
     auto compiler = re->CreateShaderCompiler();
     compiler->SetCompileFlags(bp3d::driver::SHADER_COMPILE_DEBUG | bp3d::driver::SHADER_COMPILE_O0);
-    auto vShaderHandle = compiler->Compile(vShader, "TestVertexShader", bp3d::driver::EShaderType::VERTEX);
-    auto pShaderHandle = compiler->Compile(pShader, "TestPixelShader", bp3d::driver::EShaderType::PIXEL);
+    auto vShaderObject = compiler->Compile(vShader, "TestVertexShader", bp3d::driver::EShaderType::VERTEX);
+    auto pShaderObject = compiler->Compile(pShader, "TestPixelShader", bp3d::driver::EShaderType::PIXEL);
+    bpf::io::ConsoleWriter writer;
+    for (auto &bind : vShaderObject->GetBindings())
+    {
+        bpf::String typeN;
+        switch (bind.Type)
+        {
+        case bp3d::driver::EBindingType::CONSTANT_BUFFER:
+            typeN = "CONSTANT_BUFFER";
+            break;
+        case bp3d::driver::EBindingType::SAMPLER:
+            typeN = "SAMPLER";
+            break;
+        case bp3d::driver::EBindingType::TEXTURE:
+            typeN = "TEXTURE";
+            break;
+        }
+        writer << "Found binding: Stage=Vertex, Register=" << bind.Register << ", Type=" << typeN << ", Name=" << bind.Name << newLine;
+    }
+    for (auto &bind : pShaderObject->GetBindings())
+    {
+        bpf::String typeN;
+        switch (bind.Type)
+        {
+        case bp3d::driver::EBindingType::CONSTANT_BUFFER:
+            typeN = "CONSTANT_BUFFER";
+            break;
+        case bp3d::driver::EBindingType::SAMPLER:
+            typeN = "SAMPLER";
+            break;
+        case bp3d::driver::EBindingType::TEXTURE:
+            typeN = "TEXTURE";
+            break;
+        }
+        writer << "Found binding: Stage=Pixel, Register=" << bind.Register << ", Type=" << typeN << ", Name=" << bind.Name << newLine;
+    }
+    for (auto &out : pShaderObject->GetPixelOutputs())
+        writer << "Found pixel stage output: Register=" << out.Register << ", Channels=" << out.Channels << ", Name=" << out.Name << newLine;
     compiler->Link();
-    ByteBuf vShaderCode = compiler->GetShaderByteCode(vShaderHandle);
-    ByteBuf pShaderCode = compiler->GetShaderByteCode(pShaderHandle);
-    compiler->FreeHandle(pShaderHandle);
-    compiler->FreeHandle(vShaderHandle);
+    ByteBuf vShaderCode = vShaderObject->ToByteBuf();
+    ByteBuf pShaderCode = pShaderObject->ToByteBuf();
     bp3d::driver::ShaderProgramDescriptor prog;
     bp3d::driver::ShaderDescriptor desc;
     desc.Data = *vShaderCode;
@@ -86,9 +122,8 @@ bp3d::driver::Resource AttemptBuildShaderProg(const Paths &paths, const memory::
 bp3d::driver::Resource AttemptBuildTexture(bp3d::driver::IResourceAllocator &allocator)
 {
     bpf::uint8 textureData[16] = {
-        0, 0, 0, 1,     /* */ 255, 0, 255, 1,
-        255, 0, 255, 1, /* */ 0, 0, 0, 1
-    };
+        0, 0, 0, 1, /* */ 255, 0, 255, 1,
+        255, 0, 255, 1, /* */ 0, 0, 0, 1};
     bp3d::driver::TextureDescriptor desc;
 
     desc.Compression = bp3d::driver::ETextureCompression::NONE;
@@ -148,6 +183,7 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
         writer << "SeparateVertexFormat = " << props.SeparateVertexFormat << newLine;
         writer << "SupportsMultiBlending = " << props.SupportsMultiBlending << newLine;
         writer.WriteLine("Listing display modes...");
+        writer.Flush();
         auto modes = ptr->GetDisplayModes();
         bp3d::driver::DisplayMode wanted;
         for (auto &mode : modes)
@@ -156,6 +192,7 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
             if (mode.Width == 1920U && mode.Height == 1080U && mode.Fullscreen == false)
                 wanted = mode;
         }
+        writer.Flush();
         bp3d::driver::RenderProperties rprops;
         rprops.VSync = true;
         rprops.Antialiasing = true;
@@ -187,8 +224,7 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
             0.5f, 0.5f, 1, 0,
             -0.5f, 0.5f, 0, 0,
             -0.5f, -0.5f, 0, 1,
-            0.5f, -0.5f, 1, 1
-        };
+            0.5f, -0.5f, 1, 1};
         bp3d::driver::BufferDescriptor bdesc;
         bdesc.Data = verts;
         bdesc.Size = sizeof(float) * 4 * 6;
@@ -221,11 +257,11 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
         display->GetContext().GetResourceAllocator().FreeVertexBuffer(vbuf);
         display->GetContext().GetResourceAllocator().FreeVertexFormat(vertex2d);
     }
-    catch (const ModuleException & ex)
+    catch (const ModuleException &ex)
     {
         writer << Console::TextStyle(EConsoleColor::RED) << "An error has occured while loading module: " << ex.Message() << newLine << Console::ClearTextStyle();
     }
-    catch (const RuntimeException & ex)
+    catch (const RuntimeException &ex)
     {
         writer << Console::TextStyle(EConsoleColor::RED) << "An error has occured while loading rendering engine: " << ex.Type() << "> " << ex.Message() << newLine << Console::ClearTextStyle();
     }

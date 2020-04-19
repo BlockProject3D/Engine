@@ -11,6 +11,7 @@ set(SOURCES
     include/GL40Resources.hpp
     include/GL40RenderContext.hpp
     include/ShaderDecoder.hpp
+    include/GL40ShaderCompiler.hpp
     src/glad.c
     src/GL40ResourceAllocator.cpp
     src/GL40RenderContext.cpp

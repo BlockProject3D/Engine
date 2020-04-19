@@ -27,54 +27,57 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <Framework/IO/ByteBuf.hpp>
 #include <Framework/String.hpp>
-#include <Framework/RuntimeException.hpp>
-#include <Framework/Memory/UniquePtr.hpp>
+#include <Framework/IO/ByteBuf.hpp>
 #include "Engine/Driver/ShaderProgramDescriptor.hpp"
-#include "Engine/Driver/IShader.hpp"
 
 namespace bp3d
 {
     namespace driver
     {
-        constexpr bpf::fint SHADER_COMPILE_DEBUG = 0x1;
-        constexpr bpf::fint SHADER_COMPILE_O0 = 0x2;
-        constexpr bpf::fint SHADER_COMPILE_O1 = 0x4;
-        constexpr bpf::fint SHADER_COMPILE_O2 = 0x8;
-        constexpr bpf::fint SHADER_COMPILE_O3 = 0x10;
-
-        class BP3D_API ShaderException : public bpf::RuntimeException
+        class BP3D_API IShader
         {
         public:
-            inline ShaderException(const bpf::String &message) noexcept
-                : bpf::RuntimeException("Shader", message)
+            struct Binding
             {
-            }
-        };
+                /**
+                 * The binding name
+                 */
+                bpf::String Name;
 
-        class BP3D_API IShaderCompiler
-        {
-        public:
-            virtual ~IShaderCompiler() {}
-            virtual void SetMacro(const bpf::String &name, const bpf::String &value) = 0;
-            virtual void SetCompileFlags(const bpf::fint flags) = 0;
+                /**
+                 * The binding register number
+                 */
+                int Register;
 
-            /**
-             * Compiles a shader
-             * @param code the shader code
-             * @param name a name for the shader when printing errors
-             * @param type the type of the shader to compile
-             * @throw ShaderException in case of a compile error
-             * @return an IShader that respresents the compiled shader with minimum reflection information
-             */
-            virtual bpf::memory::UniquePtr<IShader> Compile(const bpf::String &code, const bpf::String &name, const EShaderType type) = 0;
+                /**
+                 * The binding type
+                 * Only native binding types are listed: CONSTANT_BUFFER, TEXTURE, SAMPLER
+                 */
+                EBindingType Type;
+            };
+            struct PixelOutput
+            {
+                /**
+                 * The output name
+                 */
+                bpf::String Name;
 
-            /**
-             * Attempts to link all previously compiled shaders into a shader program
-             * @throw ShaderException in case of a link error
-             */
-            virtual void Link() = 0;
+                /**
+                 * The output register number
+                 */
+                int Register;
+
+                /**
+                 * Number of output channels (4 means RGBA, 1 means R only)
+                 */
+                bpf::uint8 Channels;
+            };
+
+            virtual ~IShader() {}
+            virtual bpf::io::ByteBuf ToByteBuf() = 0;
+            virtual const bpf::collection::ArrayList<Binding> &GetBindings() const noexcept = 0;
+            virtual const bpf::collection::ArrayList<PixelOutput> &GetPixelOutputs() const noexcept = 0;
         };
     }
 }

@@ -38,7 +38,7 @@ namespace gl40
     private:
         Pipeline *_curPipeline;
         bp3d::driver::Resource _curRT;
-        //GL40ResourceAllocator _ra;
+        GL40ResourceAllocator _ra;
 
     public:
         inline GL40RenderContext()
@@ -47,10 +47,10 @@ namespace gl40
         {
         }
 
-        /*inline bp3d::driver::IResourceAllocator &GetResourceAllocator() noexcept
+        inline bp3d::driver::IResourceAllocator &GetResourceAllocator() noexcept
         {
             return (_ra);
-        }*/
+        }
         inline bp3d::driver::Resource GetRenderTarget() noexcept
         {
             return (_curRT);
