@@ -47,11 +47,11 @@ namespace dx11
         DX11Shader(ID3DBlob *blob, const bpf::String &code, const bp3d::driver::EShaderType type);
         ~DX11Shader();
         bpf::io::ByteBuf ToByteBuf();
-        const bpf::collection::ArrayList<bp3d::driver::IShader::Binding> &GetBindings() const noexcept
+        inline const bpf::collection::ArrayList<bp3d::driver::IShader::Binding> &GetBindings() const noexcept
         {
             return (_bindings);
         }
-        const bpf::collection::ArrayList<bp3d::driver::IShader::PixelOutput> &GetPixelOutputs() const noexcept
+        inline const bpf::collection::ArrayList<bp3d::driver::IShader::PixelOutput> &GetPixelOutputs() const noexcept
         {
             return (_pouts);
         }
