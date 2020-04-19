@@ -30,6 +30,7 @@
 #include <Framework/Types.hpp>
 #include <Framework/Collection/ArrayList.hpp>
 #include "Engine/Driver/Resource.hpp"
+#include "Engine/Driver/TextureDescriptor.hpp"
 
 namespace bp3d
 {
@@ -59,6 +60,7 @@ namespace bp3d
             bool ScissorEnable;
             ERenderMode RenderMode;
             ECullingMode CullingMode;
+            bpf::collection::ArrayList<ETextureFormat> RenderTargetOutputTypesOverride;
         };
     }
 }
