@@ -10,11 +10,12 @@ set(SOURCES
     include/KHR/khrplatform.h
     include/GL40Resources.hpp
     include/GL40RenderContext.hpp
-    include/ShaderDecoder.hpp
     include/GL40ShaderCompiler.hpp
+    include/ShaderDecoder.hpp
     src/glad.c
     src/GL40ResourceAllocator.cpp
     src/GL40RenderContext.cpp
+    src/GL40ShaderCompiler.cpp
     src/ShaderDecoder.cpp
 )
 

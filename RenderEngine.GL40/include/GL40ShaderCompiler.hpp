@@ -31,6 +31,28 @@
 
 namespace gl40
 {
+    class GL40Shader : public bp3d::driver::IShader
+    {
+    private:
+        bpf::collection::ArrayList<bp3d::driver::IShader::Binding> _bindings;
+        bpf::collection::ArrayList<bp3d::driver::IShader::PixelOutput> _pouts;
+
+        void ExtractTypeName(const bpf::String &tname, bpf::String &subType, bpf::String &name, bpf::String &type);
+        bool IsAlphaNum(const bpf::fchar ch);
+
+    public:
+        GL40Shader(const bpf::String &code, const bp3d::driver::EShaderType stype);
+        bpf::io::ByteBuf ToByteBuf();
+        inline const bpf::collection::ArrayList<bp3d::driver::IShader::Binding> &GetBindings() const noexcept
+        {
+            return (_bindings);
+        }
+        inline const bpf::collection::ArrayList<bp3d::driver::IShader::PixelOutput> &GetPixelOutputs() const noexcept
+        {
+            return (_pouts);
+        }
+    };
+
     class GL40ShaderCompiler : public bp3d::driver::IShaderCompiler
     {
     private:
@@ -40,9 +62,7 @@ namespace gl40
     public:
         void SetMacro(const bpf::String &name, const bpf::String &value);
         void SetCompileFlags(const bpf::fint flags);
-        bp3d::driver::Resource Compile(const bpf::String &code, const bpf::String &name, const bp3d::driver::EShaderType type);
+        bpf::memory::UniquePtr<bp3d::driver::IShader> Compile(const bpf::String &code, const bpf::String &name, const bp3d::driver::EShaderType type);
         void Link();
-        bpf::io::ByteBuf GetShaderByteCode(bp3d::driver::Resource resource);
-        void FreeHandle(bp3d::driver::Resource resource);
     };
 }
