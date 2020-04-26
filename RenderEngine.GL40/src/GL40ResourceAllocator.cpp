@@ -342,6 +342,9 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocVertexFormat(const bp3d::driv
         case bp3d::driver::EVertexComponentType::INT:
             offset += sizeof(GLint);
             break;
+        case bp3d::driver::EVertexComponentType::UINT:
+            offset += sizeof(GLuint);
+            break;
         case bp3d::driver::EVertexComponentType::VECTOR_FLOAT_2:
             offset += sizeof(GLfloat) * 2;
             break;
@@ -359,6 +362,15 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocVertexFormat(const bp3d::driv
             break;
         case bp3d::driver::EVertexComponentType::VECTOR_INT_4:
             offset += sizeof(GLint) * 4;
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_2:
+            offset += sizeof(GLuint) * 2;
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_3:
+            offset += sizeof(GLuint) * 3;
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_4:
+            offset += sizeof(GLuint) * 4;
             break;
         }
     }
@@ -399,6 +411,11 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocVertexBuffer(const bp3d::driv
             o = sizeof(GLfloat);
             size = 1;
             break;
+        case bp3d::driver::EVertexComponentType::UINT:
+            t = GL_UNSIGNED_INT;
+            o = sizeof(GLuint);
+            size = 1;
+            break;
         case bp3d::driver::EVertexComponentType::INT:
             t = GL_INT;
             o = sizeof(GLint);
@@ -432,6 +449,21 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocVertexBuffer(const bp3d::driv
         case bp3d::driver::EVertexComponentType::VECTOR_INT_4:
             t = GL_INT;
             o = sizeof(GLint) * 4;
+            size = 4;
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_2:
+            t = GL_UNSIGNED_INT;
+            o = sizeof(GLuint) * 2;
+            size = 2;
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_3:
+            t = GL_UNSIGNED_INT;
+            o = sizeof(GLuint) * 3;
+            size = 3;
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_4:
+            t = GL_UNSIGNED_INT;
+            o = sizeof(GLuint) * 4;
             size = 4;
             break;
         }

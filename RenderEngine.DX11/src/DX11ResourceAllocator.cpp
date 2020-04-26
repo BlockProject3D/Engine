@@ -45,6 +45,9 @@ ID3DBlob *DX11ResourceAllocator::CompileDummyShader(const bp3d::driver::VertexFo
         case bp3d::driver::EVertexComponentType::INT:
             str += "int ";
             break;
+        case bp3d::driver::EVertexComponentType::UINT:
+            str += "uint ";
+            break;
         case bp3d::driver::EVertexComponentType::VECTOR_FLOAT_2:
             str += "float2 ";
             break;
@@ -62,6 +65,15 @@ ID3DBlob *DX11ResourceAllocator::CompileDummyShader(const bp3d::driver::VertexFo
             break;
         case bp3d::driver::EVertexComponentType::VECTOR_INT_4:
             str += "int4 ";
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_2:
+            str += "uint2 ";
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_3:
+            str += "uint3 ";
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_4:
+            str += "uint4 ";
             break;
         }
         str += comp.Name + ":" + comp.Name.ToUpper() + ";";
@@ -665,6 +677,10 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocVertexFormat(const bp3d::driv
             desc[i].Format = DXGI_FORMAT_R32_SINT;
             offset += sizeof(INT);
             break;
+        case bp3d::driver::EVertexComponentType::UINT:
+            desc[i].Format = DXGI_FORMAT_R32_UINT;
+            offset += sizeof(UINT);
+            break;
         case bp3d::driver::EVertexComponentType::VECTOR_FLOAT_2:
             desc[i].Format = DXGI_FORMAT_R32G32_FLOAT;
             offset += sizeof(FLOAT) * 2;
@@ -688,6 +704,18 @@ bp3d::driver::Resource DX11ResourceAllocator::AllocVertexFormat(const bp3d::driv
         case bp3d::driver::EVertexComponentType::VECTOR_INT_4:
             desc[i].Format = DXGI_FORMAT_R32G32B32A32_SINT;
             offset += sizeof(INT) * 4;
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_2:
+            desc[i].Format = DXGI_FORMAT_R32G32_UINT;
+            offset += sizeof(UINT) * 2;
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_3:
+            desc[i].Format = DXGI_FORMAT_R32G32B32_UINT;
+            offset += sizeof(UINT) * 3;
+            break;
+        case bp3d::driver::EVertexComponentType::VECTOR_UINT_4:
+            desc[i].Format = DXGI_FORMAT_R32G32B32A32_UINT;
+            offset += sizeof(UINT) * 4;
             break;
         }
     }

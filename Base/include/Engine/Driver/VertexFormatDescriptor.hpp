@@ -43,8 +43,12 @@ namespace bp3d
             VECTOR_INT_4,
             VECTOR_INT_3,
             VECTOR_INT_2,
+            VECTOR_UINT_4,
+            VECTOR_UINT_3,
+            VECTOR_UINT_2,
             FLOAT,
-            INT
+            INT,
+            UINT
         };
 
         struct VertexComponent
