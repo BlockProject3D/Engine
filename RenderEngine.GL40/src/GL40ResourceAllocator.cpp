@@ -467,7 +467,10 @@ bp3d::driver::Resource GL40ResourceAllocator::AllocVertexBuffer(const bp3d::driv
             size = 4;
             break;
         }
-        glVertexAttribPointer((GLuint)i, size, t, GL_FALSE, vf->Stride, (GLvoid *)offset);
+        if (t == GL_INT || GL_UNSIGNED_INT)
+            glVertexAttribIPointer((GLuint)i, size, t, vf->Stride, (GLvoid *)offset);
+        else
+            glVertexAttribPointer((GLuint)i, size, t, GL_FALSE, vf->Stride, (GLvoid *)offset);
         glEnableVertexAttribArray((GLuint)i);
         offset += o;
     }
