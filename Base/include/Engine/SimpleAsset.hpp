@@ -27,33 +27,29 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <Framework/System/Thread.hpp>
-#include <Framework/System/Mutex.hpp>
-#include <Framework/Collection/Queue.hpp>
 #include "Engine/IAssetBuilder.hpp"
 
 namespace bp3d
 {
-    class BP3D_API AssetBuildThread final : public bpf::system::Thread
+    class BP3D_API SimpleAsset : public IAssetBuilder
     {
-    public:
-        struct Entry
-        {
-            bpf::String VPath;
-            bpf::memory::UniquePtr<IAssetBuilder> Builder;
-            bpf::String Error;
-        };
-
     private:
-        bpf::collection::Queue<Entry> _pendingEntries;
-        bpf::collection::Queue<Entry> _mountableEntries;
-        bpf::system::Mutex _mutex;
+        bpf::collection::List<bpf::Tuple<bpf::String, bpf::String>> _emptyExpanded;
+        bpf::collection::List<bpf::Name> _emptyDependencies;
 
     public:
-        AssetBuildThread();
+        virtual ~SimpleAsset() {}
+        virtual void Build() = 0;
+        virtual bpf::memory::UniquePtr<Asset> Mount(AssetManager &assets, const bpf::String &vpath) = 0;
 
-        void Add(const bpf::String &vpath, bpf::memory::UniquePtr<IAssetBuilder> &&ptr);
-        bool PollMountableEntry(Entry &entry);
-        void Run();
+        inline const bpf::collection::List<bpf::Tuple<bpf::String, bpf::String>> &GetExpandedAssets() const noexcept final
+        {
+            return (_emptyExpanded);
+        }
+
+        inline const bpf::collection::List<bpf::Name> &GetDependencies() const noexcept final
+        {
+            return (_emptyDependencies);
+        }
     };
 }

@@ -26,9 +26,10 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <gtest/gtest.h>
-#include <Engine/AssetManager.hpp>
 #include "ListLogHandler.hpp"
+#include <Engine/AssetManager.hpp>
+#include <Engine/SimpleAsset.hpp>
+#include <gtest/gtest.h>
 
 using namespace bp3d;
 
@@ -50,15 +51,15 @@ public:
     }
 };
 
-class ExceptionBuilder final : public IAssetBuilder
+class ExceptionBuilder final : public SimpleAsset
 {
 public:
-    void Build(bpf::collection::Queue<bpf::Tuple<bpf::String, bpf::String>> &)
+    void Build()
     {
         throw bpf::RuntimeException("Well", "This is definately a failure!");
     }
 
-    bpf::memory::UniquePtr<Asset> Mount(const bpf::String &)
+    bpf::memory::UniquePtr<Asset> Mount(AssetManager &, const bpf::String &)
     {
         return (Null);
     }
@@ -68,20 +69,33 @@ class SuperBuilder final : public IAssetBuilder
 {
 private:
     bpf::String _loc;
+    bpf::collection::List<bpf::Tuple<bpf::String, bpf::String>> _expanded;
+    bpf::collection::List<bpf::Name> _emptyDependencies;
+
 public:
     SuperBuilder(const bpf::String &loc)
         : _loc(loc)
     {
     }
 
-    void Build(bpf::collection::Queue<bpf::Tuple<bpf::String, bpf::String>> &cache)
+    void Build()
     {
         bpf::system::Thread::Sleep(100); //Simulate long running work
         if (_loc.EndsWith("test.null"))
-            cache.Push(bpf::Tuple<bpf::String, bpf::String>("Whatever", "bp3d::Asset/null,%Assets%/whatever.null"));
+            _expanded.Add(bpf::Tuple<bpf::String, bpf::String>("Whatever", "bp3d::Asset/null,%Assets%/whatever.null"));
     }
 
-    bpf::memory::UniquePtr<Asset> Mount(const bpf::String &vpath)
+    inline const bpf::collection::List<bpf::Tuple<bpf::String, bpf::String>> &GetExpandedAssets() const noexcept final
+    {
+        return (_expanded);
+    }
+
+    inline const bpf::collection::List<bpf::Name> &GetDependencies() const noexcept final
+    {
+        return (_emptyDependencies);
+    }
+
+    bpf::memory::UniquePtr<Asset> Mount(AssetManager &, const bpf::String &vpath)
     {
         return (bpf::memory::MakeUnique<Asset>(bpf::Name(bpf::TypeName<Asset>()), vpath));
     }

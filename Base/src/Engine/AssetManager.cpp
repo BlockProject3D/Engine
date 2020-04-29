@@ -26,11 +26,15 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <Framework/ParseException.hpp>
 #include "Engine/AssetManager.hpp"
+#include <Framework/ParseException.hpp>
 
 //Force compilers like MSVC to generate symbols for the rendering engine part
-#include "Engine/Driver/IRenderEngine.hpp"
+#ifdef WINDOWS
+    #include "Engine/Driver/IRenderEngine.hpp"
+    #include "Engine/SimpleAsset.hpp"
+class BP3D_API SimpleAsset; //This forces MSVC to write the symbols inside of BP3D.dll
+#endif
 
 using namespace bp3d;
 
@@ -112,31 +116,80 @@ void AssetManager::WaitForAllObjects()
     while (_thread.GetState() == bpf::system::Thread::RUNNING)
     {
         _thread.Join();
-        while (Poll());
+        while (Poll())
+            ;
     }
 }
 
-bool AssetManager::Poll(const bpf::fsize maxMountable)
+bool AssetManager::AttemptSolveDependencies()
+{
+    if (_unresolved.Size() == 0)
+        return (false);
+    auto &entry = _unresolved.First();
+    bool solved = true;
+    for (auto &dep : entry.Builder->GetDependencies())
+    {
+        if (!_mountedAssets.HasKey(dep))
+        {
+            solved = false;
+            break;
+        }
+    }
+    if (!solved)
+    {
+        if (_thread.GetState() == bpf::system::Thread::FINISHED || _thread.GetState() == bpf::system::Thread::STOPPED)
+        {
+            _log.Error("Could not build asset '[]': some dependencies were not satisfied", entry.VPath);
+            _unresolved.RemoveAt(_unresolved.begin());
+            return (true);
+        }
+        return (true);
+    }
+    else
+    {
+        auto assetPtr = entry.Builder->Mount(*this, entry.VPath);
+        if (assetPtr != Null)
+            _mountedAssets.Add(bpf::Name(entry.VPath), std::move(assetPtr));
+        _log.Info("Successfully loaded asset '[]'", entry.VPath);
+        _unresolved.RemoveAt(_unresolved.begin());
+        return (true);
+    }
+}
+
+bool AssetManager::Poll(bpf::fsize maxMountable)
 {
     while (maxMountable > 0)
     {
         AssetBuildThread::Entry entry;
+        --maxMountable;
         if (!_thread.PollMountableEntry(entry))
-            return (false);
+            return (AttemptSolveDependencies());
         if (entry.Error != bpf::String::Empty)
         {
             _log.Error("Could not build asset '[]': an unhandled exception has occured", entry.VPath);
             _log.Error("        > []", entry.Error);
             continue;
         }
-        while (entry.Cached.Size() > 0)
+        const auto &expanded = entry.Builder->GetExpandedAssets();
+        for (auto &tuple : expanded)
         {
-            auto tuple = entry.Cached.Pop();
             auto vpath = entry.VPath + '/' + tuple.Get<0>();
             auto url = tuple.Get<1>();
             Add(vpath, url);
         }
-        auto assetPtr = entry.Builder->Mount(entry.VPath);
+        bool solved = true;
+        for (auto &dep : entry.Builder->GetDependencies())
+        {
+            if (!_mountedAssets.HasKey(dep))
+            {
+                _unresolved.Add(std::move(entry));
+                solved = false;
+                break;
+            }
+        }
+        if (!solved)
+            continue;
+        auto assetPtr = entry.Builder->Mount(*this, entry.VPath);
         if (assetPtr != Null)
             _mountedAssets.Add(bpf::Name(entry.VPath), std::move(assetPtr));
         _log.Info("Successfully loaded asset '[]'", entry.VPath);

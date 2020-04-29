@@ -33,6 +33,7 @@
 #include <Framework/TypeInfo.hpp>
 #include <Framework/Log/Logger.hpp>
 #include <Framework/System/Paths.hpp>
+#include <Framework/Collection/List.hpp>
 #include "Engine/IAssetProvider.hpp"
 #include "Engine/Asset.hpp"
 #include "Engine/AssetBuildThread.hpp"
@@ -73,7 +74,9 @@ namespace bp3d
         bpf::collection::HashMap<bpf::Name, bpf::memory::UniquePtr<bp3d::Asset>> _mountedAssets;
         bpf::collection::HashMap<bpf::String, bpf::memory::UniquePtr<IAssetProvider>> _providers;
         bpf::collection::HashMap<bpf::Name, bpf::Name> _defaults;
+        bpf::collection::List<AssetBuildThread::Entry> _unresolved;
 
+        bool AttemptSolveDependencies();
     public:
         inline AssetManager()
             : _log("AssetManager")
@@ -109,7 +112,7 @@ namespace bp3d
 
         void Remove(const bpf::String &vpath);
 
-        bool Poll(const bpf::fsize maxMountable = 1);
+        bool Poll(bpf::fsize maxMountable = 1);
 
         /**
          * Yields the main thread waiting for all pending asset objects to be mounted

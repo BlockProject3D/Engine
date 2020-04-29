@@ -29,12 +29,15 @@
 #pragma once
 #include <Framework/String.hpp>
 #include <Framework/Tuple.hpp>
-#include <Framework/Collection/Queue.hpp>
+#include <Framework/Collection/List.hpp>
 #include <Framework/Memory/UniquePtr.hpp>
 #include "Engine/Asset.hpp"
 
 namespace bp3d
 {
+    //Forward declare the AssetManager to avoid circular dependency between AssetManager and IAssetBuilder
+    class BP3D_API AssetManager;
+
     class BP3D_API IAssetBuilder
     {
     public:
@@ -42,15 +45,30 @@ namespace bp3d
 
         /**
          * Builds this asset asynchronously
-         * @param cache Push to this queue to require loading of a new asset as dependency to this one
+         * This function may not be called on the main thread so beware of race conditions
+         * It is unsafe to call any rendering method or driver resource allocations in this function
+         * This method typically runs file IO and pre-calculations in order to prepare the data for the Mount method
          */
-        virtual void Build(bpf::collection::Queue<bpf::Tuple<bpf::String, bpf::String>> &cache) = 0;
+        virtual void Build() = 0;
+
+        /**
+         * Returns a list of assets to be loaded as a result of the expansion of this asset
+         * This method is typically used for packages/archives and/or other similar types of assets
+         */
+        virtual const bpf::collection::List<bpf::Tuple<bpf::String, bpf::String>> &GetExpandedAssets() const noexcept = 0;
+
+        /**
+         * Returns a list of dependencies that must be mounted before this asset can be mounted
+         */
+        virtual const bpf::collection::List<bpf::Name> &GetDependencies() const noexcept = 0;
 
         /**
          * Callback after a successfull call to build on the main thread
          * Use this function to allocate new driver resources
+         * @param assets The instance of the AssetManager responsible for this IAssetBuilder, you can use this instance to get your dependencies
+         * @param vpath The virtual path of the Asset to be mounted
          * @return The new mounted Asset or Null if no asset is required to be mounted for this asset
          */
-        virtual bpf::memory::UniquePtr<Asset> Mount(const bpf::String &vpath) = 0;
+        virtual bpf::memory::UniquePtr<Asset> Mount(AssetManager &assets, const bpf::String &vpath) = 0;
     };
 }

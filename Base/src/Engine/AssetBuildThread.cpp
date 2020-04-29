@@ -67,9 +67,7 @@ void AssetBuildThread::Run()
         _mutex.Unlock();
         try
         {
-            bpf::collection::Queue<bpf::Tuple<bpf::String, bpf::String>> cache;
-            entry.Builder->Build(cache);
-            entry.Cached = std::move(cache);
+            entry.Builder->Build();
             entry.Error = bpf::String::Empty;
             _mutex.Lock();
             _mountableEntries.Push(std::move(entry));

@@ -28,6 +28,7 @@ set(SOURCES
     include/Engine/Asset/Texture.hpp
     include/Engine/IAssetProvider.hpp
     include/Engine/IAssetBuilder.hpp
+    include/Engine/SimpleAsset.hpp
     include/Engine/AssetBuildThread.hpp
     include/Engine/AssetManager.hpp
     include/Engine/Asset.hpp
