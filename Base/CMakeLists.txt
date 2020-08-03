@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 project(BP3D)
 
 include("${BP_FRAMEWORK_ROOT}/CMakes/Framework.cmake")
+include("CMakeLists.in.txt")
+
+find_package(ZLIB)
 
 set(SOURCES
     include/Engine/Driver/BufferDescriptor.hpp
@@ -32,8 +35,10 @@ set(SOURCES
     include/Engine/AssetBuildThread.hpp
     include/Engine/AssetManager.hpp
     include/Engine/Asset.hpp
+    include/Engine/BPX/Manager.hpp
     src/Engine/AssetManager.cpp
     src/Engine/AssetBuildThread.cpp
+    src/Engine/BPX/Manager.cpp
 )
 
 bp_setup_module(BP3D BP3D_API)

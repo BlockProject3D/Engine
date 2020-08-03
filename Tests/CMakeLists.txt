@@ -33,6 +33,7 @@ set(SOURCES
     src/ListLogHandler.cpp
     src/main.cpp
     src/AssetManager.cpp
+    src/BPX.cpp
 )
 
 bp_setup_program(${PROJECT_NAME} include)
