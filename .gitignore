@@ -1,5 +1,5 @@
 ﻿/build
-/Framework-*
 /BP3D.cmake
-/BP3D.RenderEngine.DX11.cmake
 /.vscode
+/cmake-build-debug
+/.idea
