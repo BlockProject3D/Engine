@@ -26,20 +26,3 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <zlib.h>
-
-void test()
-{
-    char data[] = "This is a test";
-    const size_t BUFSIZE = 128 * 1024;
-    Bytef temp_buffer[BUFSIZE];
-
-    z_stream strm;
-    strm.zalloc = 0;
-    strm.zfree = 0;
-    strm.next_in = reinterpret_cast<Bytef *>(data);
-    strm.avail_in = sizeof(data);
-    strm.next_out = temp_buffer;
-    strm.avail_out = BUFSIZE;
-    deflateInit(&strm, Z_BEST_COMPRESSION);
-}

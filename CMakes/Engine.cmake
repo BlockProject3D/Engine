@@ -1,4 +1,4 @@
-include("${BP_FRAMEWORK_ROOT}/CMakes/Framework.cmake")
+find_package(BPF COMPONENTS Module)
 
 list(APPEND BP_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../")
 
@@ -12,8 +12,8 @@ macro(bp_setup_driver name)
     # Attempt at fixing templates problems under MSVC 2017
     target_compile_definitions(${name} PRIVATE "BP_TPL_API=${BP_SYMBOL_EXPORT_MACRO}")
 
-    bp_add_module(${name} "BPF")
-	bp_add_module(${PROJECT_NAME} BP3D)
+    bp_use_module(${name} "BPF")
+	bp_use_module(${PROJECT_NAME} BP3D)
 
     bp_setup_target(${name} include ${SOURCES})
 endmacro(bp_setup_driver)
