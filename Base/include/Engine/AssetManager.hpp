@@ -97,12 +97,12 @@ namespace bp3d
          */
         void Add(const bpf::String &vpath, const bpf::String &url);
 
-        inline void AddLogHandler(bpf::memory::UniquePtr<bpf::log::ILogHandler> &&ptr)
+        inline void AddLogHandler(bpf::memory::UniquePtr<bpf::log::ILogAdapter> &&ptr)
         {
             _log.AddHandler(std::move(ptr));
         }
 
-        static bpf::io::File GetAssetPath(const bpf::system::Paths paths, const bpf::String &location);
+        static bpf::io::File GetAssetPath(const bpf::system::Paths &paths, const bpf::String &location);
 
         template <typename T>
         inline void Add(bpf::memory::UniquePtr<Asset> &&ptr)

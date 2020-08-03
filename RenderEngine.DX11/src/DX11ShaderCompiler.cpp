@@ -26,6 +26,7 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#define BP_COMPAT_2_X
 #include "DX11ShaderCompiler.hpp"
 #include <Framework/Memory/Utility.hpp>
 #undef min

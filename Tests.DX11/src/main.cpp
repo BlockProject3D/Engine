@@ -26,13 +26,13 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#define BP_COMPAT_2_X
+
 #include <Engine/Driver/IRenderEngine.hpp>
 #include <Framework/IO/ConsoleWriter.hpp>
 #include <Framework/IO/FileStream.hpp>
 #include <Framework/IO/TextReader.hpp>
-#include <Framework/System/IApplication.hpp>
-#include <Framework/System/ModuleManager.hpp>
-#include <Framework/System/Platform.hpp>
+#include <Framework/System/PluginLoader.hpp>
 
 using namespace bpf::system;
 using namespace bpf::collection;
@@ -45,12 +45,12 @@ bp3d::driver::Resource AttemptBuildShaderProg(const Paths &paths, const memory::
     String vShader;
     String pShader;
     {
-        FileStream stream(paths.AppRoot() + "../../Tests.DX11/test.vertex.hlsl", FILE_MODE_READ);
+        FileStream stream(paths.AppRoot + "../../Tests.DX11/test.vertex.hlsl", FILE_MODE_READ);
         TextReader reader(stream);
         vShader = reader.ReadAll();
     }
     {
-        FileStream stream(paths.AppRoot() + "../../Tests.DX11/test.pixel.hlsl", FILE_MODE_READ);
+        FileStream stream(paths.AppRoot + "../../Tests.DX11/test.pixel.hlsl", FILE_MODE_READ);
         TextReader reader(stream);
         pShader = reader.ReadAll();
     }
@@ -163,19 +163,20 @@ bp3d::driver::Resource AttemptBuildPipeline(bp3d::driver::IResourceAllocator &al
     return (allocator.AllocPipeline(desc));
 }
 
-int Main(IApplication &app, const Array<String> &args, const Paths &paths)
+int Main(Application &app, const Array<String> &args)
 {
+    app.SetModuleDirectories({app.Props.ThirdParty});
     ConsoleWriter writer;
     auto newLine = Platform::GetOSInfo().NewLine;
-    ModuleManager<bp3d::driver::IRenderEngine> mdManager(paths.AppRoot());
+    PluginLoader mdManager(app.Props.AppRoot);
 
     writer.WriteLine("Welcome to the DX11 testing program");
-    writer << "App root: " << paths.AppRoot().Path() << newLine;
+    writer << "App root: " << app.Props.AppRoot.Path() << newLine;
     writer.WriteLine("Loading RenderEngine.DX11 module...");
     try
     {
-        mdManager.LoadModule("RenderEngine", "BP3D.RenderEngine.DX11");
-        auto &ptr = mdManager.GetModule(Name("RenderEngine"));
+        auto plugin = mdManager.Load<bp3d::driver::IRenderEngine>("RenderEngine", "BP3D.RenderEngine.DX11");
+        auto &ptr = plugin.Interface;
         auto &props = ptr->GetProperties();
         writer << "DriverName = " << props.DriverName << newLine;
         writer << "FlipTextureSpace = " << props.FlipTextureSpace << newLine;
@@ -189,7 +190,7 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
         for (auto &mode : modes)
         {
             writer << "\t{ Id=" << mode.Id << ", Width=" << mode.Width << ", Height=" << mode.Height << ", Fullscreen=" << mode.Fullscreen << ", IsVR=" << mode.IsVR << " }" << newLine;
-            if (mode.Width == 1920U && mode.Height == 1080U && mode.Fullscreen == false)
+            if (mode.Width == 1920U && mode.Height == 1080U && !mode.Fullscreen)
                 wanted = mode;
         }
         writer.Flush();
@@ -229,7 +230,7 @@ int Main(IApplication &app, const Array<String> &args, const Paths &paths)
         bdesc.Data = verts;
         bdesc.Size = sizeof(float) * 4 * 6;
         auto vbuf = display->GetContext().GetResourceAllocator().AllocVertexBuffer(bp3d::driver::EBufferType::STATIC, vertex2d, bdesc);
-        auto shader = AttemptBuildShaderProg(paths, ptr, display->GetContext().GetResourceAllocator());
+        auto shader = AttemptBuildShaderProg(app.Props, ptr, display->GetContext().GetResourceAllocator());
         auto pipeline = AttemptBuildPipeline(display->GetContext().GetResourceAllocator(), shader, vertex2d);
         auto texture = AttemptBuildTexture(display->GetContext().GetResourceAllocator());
         auto sampler = AttemptBuildSampler(display->GetContext().GetResourceAllocator());

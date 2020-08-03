@@ -28,7 +28,7 @@
 
 #pragma once
 #include <Framework/Memory/UniquePtr.hpp>
-#include <Framework/System/IApplication.hpp>
+#include <Framework/System/Application.hpp>
 #include "Engine/Driver/IDisplay.hpp"
 #include "Engine/Driver/IShaderCompiler.hpp"
 
@@ -143,8 +143,8 @@ namespace bp3d
         {
         public:
             virtual ~IRenderEngine() {}
-            virtual bpf::memory::UniquePtr<IStandardDisplay> CreateStandardDisplay(bpf::system::IApplication &app, const bpf::String &title, const DisplayMode &mode, const RenderProperties &props) = 0;
-            virtual bpf::memory::UniquePtr<IVRDisplay> CreateVRDisplay(bpf::system::IApplication &app, const DisplayMode &mode, const RenderProperties &props) = 0;
+            virtual bpf::memory::UniquePtr<IStandardDisplay> CreateStandardDisplay(bpf::system::Application &app, const bpf::String &title, const DisplayMode &mode, const RenderProperties &props) = 0;
+            virtual bpf::memory::UniquePtr<IVRDisplay> CreateVRDisplay(bpf::system::Application &app, const DisplayMode &mode, const RenderProperties &props) = 0;
             virtual bpf::memory::UniquePtr<IShaderCompiler> CreateShaderCompiler() = 0;
             virtual bpf::collection::ArrayList<DisplayMode> GetDisplayModes() noexcept = 0;
             virtual const RenderEngineProperties &GetProperties() const noexcept = 0;

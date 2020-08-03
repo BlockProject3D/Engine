@@ -26,10 +26,11 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#define BP_COMPAT_2_X
 #include "DX11RenderEngine.hpp"
 #include "DX11Display.hpp"
 #include "DX11ShaderCompiler.hpp"
-#include <Framework/System/ModuleInterface.hpp>
+#include <Framework/System/PluginInterface.hpp>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
 
@@ -108,7 +109,7 @@ DX11RenderEngine::~DX11RenderEngine()
 #endif
 }
 
-bpf::memory::UniquePtr<bp3d::driver::IStandardDisplay> DX11RenderEngine::CreateStandardDisplay(bpf::system::IApplication &, const bpf::String &title, const bp3d::driver::DisplayMode &mode, const bp3d::driver::RenderProperties &props)
+bpf::memory::UniquePtr<bp3d::driver::IStandardDisplay> DX11RenderEngine::CreateStandardDisplay(bpf::system::Application &, const bpf::String &title, const bp3d::driver::DisplayMode &mode, const bp3d::driver::RenderProperties &props)
 {
     if (mode.IsVR)
         throw bpf::RuntimeException("RenderEngine", "Use CreateVRDisplay to create a VR display");
@@ -177,7 +178,7 @@ bpf::memory::UniquePtr<bp3d::driver::IStandardDisplay> DX11RenderEngine::CreateS
     return (bpf::memory::MakeUnique<DX11StandardDisplay>(swapChain, device, deviceContext, cprops, props, window));
 }
 
-bpf::memory::UniquePtr<bp3d::driver::IVRDisplay> DX11RenderEngine::CreateVRDisplay(bpf::system::IApplication &, const bp3d::driver::DisplayMode &, const bp3d::driver::RenderProperties &)
+bpf::memory::UniquePtr<bp3d::driver::IVRDisplay> DX11RenderEngine::CreateVRDisplay(bpf::system::Application &, const bp3d::driver::DisplayMode &, const bp3d::driver::RenderProperties &)
 {
     throw bpf::RuntimeException("RenderEngine", "VR is not yet supported on DirectX11");
 }
@@ -207,4 +208,4 @@ bpf::collection::ArrayList<bp3d::driver::DisplayMode> DX11RenderEngine::GetDispl
     return (modes);
 }
 
-BP_IMPLEMENT_MODULE(RenderEngine, bp3d::driver::IRenderEngine, dx11::DX11RenderEngine);
+BP_IMPLEMENT_PLUGIN(RenderEngine, bp3d::driver::IRenderEngine, dx11::DX11RenderEngine);

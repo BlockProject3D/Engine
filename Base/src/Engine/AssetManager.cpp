@@ -26,6 +26,8 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#define BP_COMPAT_2_X
+
 #include "Engine/AssetManager.hpp"
 #include <Framework/ParseException.hpp>
 
@@ -76,11 +78,11 @@ void AssetManager::Add(const bpf::String &vpath, const bpf::String &url)
     }
 }
 
-bpf::io::File AssetManager::GetAssetPath(const bpf::system::Paths paths, const bpf::String &location)
+bpf::io::File AssetManager::GetAssetPath(const bpf::system::Paths &paths, const bpf::String &location)
 {
-    auto path = location.Replace("%Cache%", paths.CacheDir().Path())
-                    .Replace("%App%", paths.AppRoot().Path())
-                    .Replace("%Assets%", (paths.AppRoot() + "Assets").Path());
+    auto path = location.Replace("%Cache%", paths.CacheDir.Path())
+                    .Replace("%App%", paths.AppRoot.Path())
+                    .Replace("%Assets%", (paths.AppRoot + "Assets").Path());
     return (bpf::io::File(path));
 }
 

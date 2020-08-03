@@ -44,8 +44,8 @@ namespace dx11
     public:
         DX11RenderEngine();
         ~DX11RenderEngine();
-        bpf::memory::UniquePtr<bp3d::driver::IStandardDisplay> CreateStandardDisplay(bpf::system::IApplication &app, const bpf::String &title, const bp3d::driver::DisplayMode &mode, const bp3d::driver::RenderProperties &props);
-        bpf::memory::UniquePtr<bp3d::driver::IVRDisplay> CreateVRDisplay(bpf::system::IApplication &app, const bp3d::driver::DisplayMode &mode, const bp3d::driver::RenderProperties &props);
+        bpf::memory::UniquePtr<bp3d::driver::IStandardDisplay> CreateStandardDisplay(bpf::system::Application &app, const bpf::String &title, const bp3d::driver::DisplayMode &mode, const bp3d::driver::RenderProperties &props);
+        bpf::memory::UniquePtr<bp3d::driver::IVRDisplay> CreateVRDisplay(bpf::system::Application &app, const bp3d::driver::DisplayMode &mode, const bp3d::driver::RenderProperties &props);
         bpf::memory::UniquePtr<bp3d::driver::IShaderCompiler> CreateShaderCompiler();
         bpf::collection::ArrayList<bp3d::driver::DisplayMode> GetDisplayModes() noexcept;
 
