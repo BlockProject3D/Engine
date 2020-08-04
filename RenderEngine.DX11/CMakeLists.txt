@@ -1,8 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 project(BP3D.RenderEngine.DX11)
 
-find_package(BPF COMPONENTS Plugin)
-include("../CMakes/ThirdParty.cmake")
+find_package(BPF COMPONENTS Plugin Conan)
+
+conan_add_remote(NAME bincrafters INDEX 1 URL https://api.bintray.com/conan/bincrafters/public-conan)
+conan_cmake_run(
+    REQUIRES sdl2/2.0.12@bincrafters/stable
+    OPTIONS sdl2:sdl2main=False sdl2:shared=True
+    BASIC_SETUP CMAKE_TARGETS KEEP_RPATHS
+    BUILD missing
+)
 
 set(SOURCES
     include/DX11ResourceAllocator.hpp
@@ -21,6 +28,8 @@ set(SOURCES
 #This macro will never be used as driver modules do not have any API they map to existing APIs
 bp_setup_plugin(${PROJECT_NAME})
 bp_use_module(${PROJECT_NAME} BP3D)
+target_link_libraries(${PROJECT_NAME} PRIVATE CONAN_PKG::sdl2)
 target_link_libraries(${PROJECT_NAME} PRIVATE d3dcompiler.lib d3d11.lib dxgi.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE debug DXGuid.lib)
-bp_add_thirdparty(${PROJECT_NAME} SDL2)
+
+conan_cmake_copy_third_party(SDL2)
