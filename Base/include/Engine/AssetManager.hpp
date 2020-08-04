@@ -27,6 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
+#define BP_COMPAT_2_X
 #include <Framework/Collection/HashMap.hpp>
 #include <Framework/Memory/UniquePtr.hpp>
 #include <Framework/Memory/ObjectPtr.hpp>

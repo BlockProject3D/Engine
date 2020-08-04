@@ -27,18 +27,18 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
-#include <Framework/Log/ILogHandler.hpp>
+#include <Framework/Log/ILogAdapter.hpp>
 #include <Framework/Collection/List.hpp>
 
-class ListLogHandler final : public bpf::log::ILogHandler
+class ListLogHandler final : public bpf::log::ILogAdapter
 {
 private:
     bpf::collection::List<bpf::String> &_logs;
 
 public:
-    inline ListLogHandler(bpf::collection::List<bpf::String> &lst)
+    explicit inline ListLogHandler(bpf::collection::List<bpf::String> &lst)
         : _logs(lst)
     {
     }
-    void LogMessage(bpf::log::ELogLevel level, const bpf::String &category, const bpf::String &msg);
+    void LogMessage(bpf::log::ELogLevel level, const bpf::String &category, const bpf::String &msg) final;
 };

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(BP3D.RenderEngine.DX11)
 
-include("../CMakes/Engine.cmake")
+find_package(BPF COMPONENTS Plugin)
 include("../CMakes/ThirdParty.cmake")
 
 set(SOURCES
@@ -19,7 +19,8 @@ set(SOURCES
 )
 
 #This macro will never be used as driver modules do not have any API they map to existing APIs
-bp_setup_driver(${PROJECT_NAME})
+bp_setup_plugin(${PROJECT_NAME})
+bp_use_module(${PROJECT_NAME} BP3D)
 target_link_libraries(${PROJECT_NAME} PRIVATE d3dcompiler.lib d3d11.lib dxgi.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE debug DXGuid.lib)
 bp_add_thirdparty(${PROJECT_NAME} SDL2)

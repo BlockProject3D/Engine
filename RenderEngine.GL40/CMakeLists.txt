@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(BP3D.RenderEngine.GL40)
 
-include("../CMakes/Engine.cmake")
+find_package(BPF COMPONENTS Plugin)
 include("../CMakes/ThirdParty.cmake")
 
 set(SOURCES
@@ -20,6 +20,7 @@ set(SOURCES
 )
 
 #This macro will never be used as driver modules do not have any API they map to existing APIs
-bp_setup_driver(${PROJECT_NAME})
+bp_setup_plugin(${PROJECT_NAME})
+bp_use_module(${PROJECT_NAME} BP3D)
 #We provide pre-build libraries for SDL2 on Windows
 bp_add_thirdparty(${PROJECT_NAME} SDL2)

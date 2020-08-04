@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(BP3D.Tests)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../CMakes/Program.cmake")
+find_package(BPF COMPONENTS Program)
 
 configure_file(CMakeLists.in.txt googletest-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .

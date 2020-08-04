@@ -26,6 +26,7 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#define BP_COMPAT_2_X
 #include "ListLogHandler.hpp"
 #include <Engine/AssetManager.hpp>
 #include <Engine/SimpleAsset.hpp>
@@ -36,16 +37,16 @@ using namespace bp3d;
 class DummyProvider final : public IAssetProvider
 {
 public:
-    bpf::memory::UniquePtr<IAssetBuilder> Create(const bpf::String &)
+    bpf::memory::UniquePtr<IAssetBuilder> Create(const bpf::String &) final
     {
-        return (Null);
+        return (nullptr);
     }
 };
 
 class ExceptionProvider final : public IAssetProvider
 {
 public:
-    bpf::memory::UniquePtr<IAssetBuilder> Create(const bpf::String &)
+    bpf::memory::UniquePtr<IAssetBuilder> Create(const bpf::String &) final
     {
         throw bpf::RuntimeException("Well", "Too bad I failed...");
     }
@@ -54,14 +55,14 @@ public:
 class ExceptionBuilder final : public SimpleAsset
 {
 public:
-    void Build()
+    void Build() final
     {
         throw bpf::RuntimeException("Well", "This is definately a failure!");
     }
 
-    bpf::memory::UniquePtr<Asset> Mount(AssetManager &, const bpf::String &)
+    bpf::memory::UniquePtr<Asset> Mount(AssetManager &, const bpf::String &) final
     {
-        return (Null);
+        return (nullptr);
     }
 };
 
@@ -73,12 +74,12 @@ private:
     bpf::collection::List<bpf::Name> _emptyDependencies;
 
 public:
-    SuperBuilder(const bpf::String &loc)
+    explicit SuperBuilder(const bpf::String &loc)
         : _loc(loc)
     {
     }
 
-    void Build()
+    void Build() final
     {
         bpf::system::Thread::Sleep(100); //Simulate long running work
         if (_loc.EndsWith("test.null"))
@@ -95,7 +96,7 @@ public:
         return (_emptyDependencies);
     }
 
-    bpf::memory::UniquePtr<Asset> Mount(AssetManager &, const bpf::String &vpath)
+    bpf::memory::UniquePtr<Asset> Mount(AssetManager &, const bpf::String &vpath) final
     {
         return (bpf::memory::MakeUnique<Asset>(bpf::Name(bpf::TypeName<Asset>()), vpath));
     }
@@ -113,7 +114,7 @@ public:
         , _except_(except)
     {
     }
-    bpf::memory::UniquePtr<IAssetBuilder> Create(const bpf::String &loc)
+    bpf::memory::UniquePtr<IAssetBuilder> Create(const bpf::String &loc) final
     {
         if (_except_)
             return (bpf::memory::MakeUnique<ExceptionBuilder>());
@@ -210,10 +211,10 @@ TEST(AssetManager, Get)
     EXPECT_STREQ(*logs[1], "[INFO]AssetManager> Loading asset 'Test/Null/Whatever' with url 'bp3d::Asset/null,%Assets%/whatever.null'...");
     EXPECT_STREQ(*logs[2], "[INFO]AssetManager> Successfully loaded asset 'Test/Null'");
     EXPECT_STREQ(*logs[3], "[INFO]AssetManager> Successfully loaded asset 'Test/Null/Whatever'");
-    EXPECT_NE(manager.Get<Asset>(bpf::Name("Test/Null")), Null);
-    EXPECT_NE(manager.Get<Asset>(bpf::Name("Test/Null/Whatever")), Null);
+    EXPECT_NE(manager.Get<Asset>(bpf::Name("Test/Null")), nullptr);
+    EXPECT_NE(manager.Get<Asset>(bpf::Name("Test/Null/Whatever")), nullptr);
     EXPECT_STREQ(*manager.Get<Asset>(bpf::Name("Test/Null"))->VirtualPath(), "Test/Null");
     EXPECT_STREQ(*manager.Get<Asset>(bpf::Name("Test/Null/Whatever"))->VirtualPath(), "Test/Null/Whatever");
-    EXPECT_EQ(manager.Get<Asset>(bpf::Name()), Null);
-    EXPECT_EQ(manager.Get<bpf::memory::Object>(bpf::Name("Test/Null")), Null); //Unrelated type with no default should return null
+    EXPECT_EQ(manager.Get<Asset>(bpf::Name()), nullptr);
+    EXPECT_EQ(manager.Get<bpf::memory::Object>(bpf::Name("Test/Null")), nullptr); //Unrelated type with no default should return null
 }
