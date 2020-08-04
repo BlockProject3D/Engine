@@ -1,5 +1,0 @@
-function(bp_add_thirdparty tname name)
-    include(${CMAKE_CURRENT_LIST_DIR}/../ThirdParty/${name}.cmake)
-    target_include_directories(${tname} PRIVATE ${INCLUDE_DIR})
-    target_link_libraries(${tname} PRIVATE ${LIB})
-endfunction(bp_add_thirdparty)
