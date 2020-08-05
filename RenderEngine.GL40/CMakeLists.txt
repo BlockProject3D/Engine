@@ -3,10 +3,10 @@ project(BP3D.RenderEngine.GL40)
 
 find_package(BPF COMPONENTS Plugin Conan)
 
-conan_add_remote(NAME bincrafters INDEX 1 URL https://api.bintray.com/conan/bincrafters/public-conan)
+conan_add_remote(NAME bp3d INDEX 1 URL https://api.bintray.com/conan/yuri6037/bp3d)
+conan_add_remote(NAME bincrafters INDEX 2 URL https://api.bintray.com/conan/bincrafters/public-conan)
 conan_cmake_run(
-    REQUIRES sdl2/2.0.12@bincrafters/stable
-    OPTIONS sdl2:sdl2main=False sdl2:shared=True
+    REQUIRES sdl2/2.0.12@bp3d/stable
     BASIC_SETUP CMAKE_TARGETS KEEP_RPATHS
     BUILD missing
 )
